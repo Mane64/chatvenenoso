@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "595381017668",
+    "project_id": "venenosochatupp",
+    "storage_bucket": "venenosochatupp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:595381017668:android:0d1660708e76d467107011",
+        "android_client_info": {
+          "package_name": "com.example.chatvenenoso"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "595381017668-tia73lhsosnaropnffkr3j2sm8hlicj5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-jpXzePXhmY0J5lvaqf9T3tZCKYUf1yA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "595381017668-tia73lhsosnaropnffkr3j2sm8hlicj5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

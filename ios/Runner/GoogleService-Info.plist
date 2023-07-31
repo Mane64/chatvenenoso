@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>595381017668-6v7264d5ejk4c148cobcnrf060a3oat8.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.595381017668-6v7264d5ejk4c148cobcnrf060a3oat8</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBg2v8_nfysxX3OKkuWRE7T6XmIE2mDjuQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>595381017668</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.chatvenenoso</string>
+	<key>PROJECT_ID</key>
+	<string>venenosochatupp</string>
+	<key>STORAGE_BUCKET</key>
+	<string>venenosochatupp.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:595381017668:ios:41f82849aa0c0599107011</string>
+</dict>
+</plist>
