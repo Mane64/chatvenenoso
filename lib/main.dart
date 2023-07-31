@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:chatvenenoso/Chatscreen.dart';
+import 'package:chatvenenoso/Canales.dart';
 
 void main() async {
   await Firebase.initializeApp(
@@ -16,9 +16,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Chat con Firebase',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.purple,
       ),
-      home: ChatScreen(),
+      home: ChannelListScreen(),
     );
   }
 }

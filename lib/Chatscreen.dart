@@ -3,6 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChatScreen extends StatefulWidget {
+  final String channel; // Agrega el parámetro channel
+
+  ChatScreen({required this.channel}); // Constructor con el parámetro channel
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
@@ -12,12 +15,29 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _messageController = TextEditingController();
 
+  String _currentChannel = 'general'; // Canal de chat predeterminado
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Chat con Firebase'),
         actions: [
+          PopupMenuButton<String>(
+            onSelected: (channel) {
+              setState(() {
+                _currentChannel = channel;
+              });
+            },
+            itemBuilder: (BuildContext context) {
+              return ['general', 'random', 'tech', 'news'].map((channel) {
+                return PopupMenuItem<String>(
+                  value: channel,
+                  child: Text(channel),
+                );
+              }).toList();
+            },
+          ),
           IconButton(
             icon: Icon(Icons.exit_to_app),
             onPressed: _signOut,
@@ -28,7 +48,12 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore.collection('messages').snapshots(),
+              stream: _firestore
+                  .collection('messages')
+                  .doc(_currentChannel)
+                  .collection('chats')
+                  .orderBy('timestamp')
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return Center(
@@ -75,7 +100,11 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendMessage() {
     String message = _messageController.text.trim();
     if (message.isNotEmpty) {
-      _firestore.collection('messages').add({
+      _firestore
+          .collection('messages')
+          .doc(_currentChannel)
+          .collection('chats')
+          .add({
         'text': message,
         'timestamp': FieldValue.serverTimestamp(),
       });
