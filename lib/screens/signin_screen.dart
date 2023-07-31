@@ -5,6 +5,7 @@ import 'package:chatvenenoso/screens/signinup_screen.dart';
 import 'package:chatvenenoso/utils/color_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:chatvenenoso/Canales.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -55,8 +56,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           email: _emailTextController.text,
                           password: _passwordTextController.text)
                       .then((value) {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ChannelListScreen()));
                   }).onError((error, stackTrace) {
                     print("Error ${error.toString()}");
                   });

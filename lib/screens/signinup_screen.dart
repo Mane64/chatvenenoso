@@ -2,7 +2,7 @@ import 'package:chatvenenoso/reusable_widgets/reusable_widgets.dart';
 import 'package:chatvenenoso/screens/home_screen.dart';
 import 'package:chatvenenoso/utils/color_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:chatvenenoso/screens/signin_screen.dart';
 import 'package:flutter/material.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -67,8 +67,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           password: _passwordTextController.text)
                       .then((value) {
                     print("Created New Account");
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => SignInScreen()));
                   }).onError((error, stackTrace) {
                     print("Error ${error.toString()}");
                   });

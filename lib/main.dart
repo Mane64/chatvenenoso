@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:chatvenenoso/Canales.dart';
 import 'package:chatvenenoso/screens/signin_screen.dart';
 
 void main() async {
@@ -15,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chat con Firebase',
+      title: 'VIBOREO UPPE',
       theme: ThemeData(
         primarySwatch: Colors.purple,
       ),
