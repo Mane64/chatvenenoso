@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatScreen extends StatefulWidget {
   final String channel;
+  final String channelID;
 
-  ChatScreen({required this.channel});
+  ChatScreen({required this.channel, required this.channelID});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -17,6 +19,15 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _newUserEmailController = TextEditingController();
+
+  late String
+      currentUserName; // Variable para almacenar el nombre del usuario actual
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserName(); // Obtener el nombre del usuario actual
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +52,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _firestore
                   .collection('messages')
-                  .doc(widget.channel)
+                  .doc(widget.channelID)
                   .collection('chats')
                   .orderBy('timestamp')
                   .snapshots(),
@@ -55,30 +66,31 @@ class _ChatScreenState extends State<ChatScreen> {
                 List<Widget> messageWidgets = [];
                 for (var message in messages) {
                   final messageText = message.get('text');
-                  final sender = message.get(
-                      'sender'); // Obtener la información del remitente (sender)
-                  final currentUserUID = _auth.currentUser!.uid;
+                  final sender = message.get('sender');
+                  final timestamp = message.get('timestamp');
 
                   final messageWidget = ChatBubble(
                     clipper: ChatBubbleClipper9(
-                      type: sender == currentUserUID
+                      type: sender == _auth.currentUser!.uid
                           ? BubbleType.sendBubble
                           : BubbleType.receiverBubble,
                     ),
-                    alignment: sender == currentUserUID
+                    alignment: sender == _auth.currentUser!.uid
                         ? Alignment.topRight
                         : Alignment.topLeft,
                     margin: EdgeInsets.only(top: 8, bottom: 8),
-                    backGroundColor: sender == currentUserUID
-                        ? Colors.blue
-                        : Colors.grey[300],
+                    backGroundColor: sender == _auth.currentUser!.uid
+                        ? Colors.black
+                        : Colors.purple,
                     child: Column(
-                      crossAxisAlignment: sender == currentUserUID
+                      crossAxisAlignment: sender == _auth.currentUser!.uid
                           ? CrossAxisAlignment.end
                           : CrossAxisAlignment.start,
                       children: [
                         Text(
-                          sender == currentUserUID ? 'Tú' : 'Otro usuario',
+                          sender == _auth.currentUser!.uid
+                              ? 'Tú'
+                              : currentUserName, // Mostrar el nombre del remitente
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -126,12 +138,21 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _getUserName() async {
+    final currentUserUID = _auth.currentUser!.uid;
+    final userSnapshot =
+        await _firestore.collection('usuarios').doc(currentUserUID).get();
+    setState(() {
+      currentUserName = userSnapshot['nombre'];
+    });
+  }
+
   void _sendMessage() {
     String message = _messageController.text.trim();
     if (message.isNotEmpty) {
       _firestore
           .collection('messages')
-          .doc(widget.channel)
+          .doc(widget.channelID)
           .collection('chats')
           .add({
         'text': message,
@@ -184,13 +205,13 @@ class _ChatScreenState extends State<ChatScreen> {
     if (newUserEmail.isNotEmpty) {
       // Buscar el UID del usuario a agregar por su correo electrónico
       _firestore
-          .collection('users')
+          .collection('usuarios')
           .where('email', isEqualTo: newUserEmail)
           .get()
           .then((querySnapshot) {
         if (querySnapshot.docs.isNotEmpty) {
           final newUserUID = querySnapshot.docs.first.id;
-          _firestore.collection('channels').doc(widget.channel).update({
+          _firestore.collection('channels').doc(widget.channelID).update({
             'authorized_users': FieldValue.arrayUnion([newUserUID]),
           });
           _newUserEmailController.clear();

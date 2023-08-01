@@ -93,11 +93,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
       // Obtener el UID del usuario recién registrado
       final newUserUID = userCredential.user!.uid;
 
-      // Agregar los datos del usuario a la colección 'users' en Firestore
-      await FirebaseFirestore.instance.collection('users').doc(newUserUID).set({
+      // Agregar los datos del usuario a la colección 'usuarios' en Firestore
+      await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(newUserUID)
+          .set({
+        'nombre': _userNameTextController.text, // Agregar el nombre de usuario
         'email': email,
-        'username': _userNameTextController.text, // Agrega el nombre de usuario
-        // Otras propiedades del usuario, si las tienes
+        'uid': newUserUID,
       });
 
       print("Created New Account");
