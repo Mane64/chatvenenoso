@@ -1,5 +1,4 @@
 import 'package:chatvenenoso/reusable_widgets/reusable_widgets.dart';
-import 'package:chatvenenoso/screens/home_screen.dart';
 import 'package:chatvenenoso/screens/reset_password.dart';
 import 'package:chatvenenoso/screens/signinup_screen.dart';
 import 'package:chatvenenoso/utils/color_utils.dart';
