@@ -27,12 +27,25 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lista de Canales'),
+        title: Text('UPPE Chat'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () {
-              _showAddChannelDialog(); // Mostrar el cuadro de diálogo para agregar un nuevo canal
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: Text('Agregar Nuevo Canal'),
+                value: 'add_channel',
+              ),
+              PopupMenuItem(
+                child: Text('Cerrar Sesión'),
+                value: 'sign_out',
+              ),
+            ],
+            onSelected: (value) {
+              if (value == 'add_channel') {
+                _showAddChannelDialog(); // Mostrar el cuadro de diálogo para agregar un nuevo canal
+              } else if (value == 'sign_out') {
+                _signOut(); // Cerrar sesión actual
+              }
             },
           ),
         ],
@@ -122,5 +135,10 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
 
       _newChannelController.clear();
     }
+  }
+
+  void _signOut() async {
+    await _auth.signOut();
+    Navigator.pop(context); // Cerrar la pantalla de lista de canales y volver a la pantalla de inicio de sesión
   }
 }
