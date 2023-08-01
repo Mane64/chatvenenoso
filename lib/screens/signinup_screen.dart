@@ -68,16 +68,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       .then((value) {
                     print("Created New Account");
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => SignInScreen()));
+                      context,
+                      PageRouteBuilder(
+                        transitionDuration: Duration(milliseconds: 500),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          var begin = Offset(1.0, 0.0);
+                          var end = Offset.zero;
+                          var tween = Tween(begin: begin, end: end);
+                          var offsetAnimation = animation.drive(tween);
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                        pageBuilder: (context, animation, secondaryAnimation) {
+                          return SignInScreen();
+                        },
+                      ),
+                    );
                   }).onError((error, stackTrace) {
                     print("Error ${error.toString()}");
                   });
-                })
+                }),
               ],
             ),
-          ))),
+          ),
+        ),
+      ),
     );
   }
 }
