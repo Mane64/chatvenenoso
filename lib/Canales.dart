@@ -1,3 +1,4 @@
+import 'package:chatvenenoso/screens/signin_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -221,37 +222,41 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
       _newChannelController.clear();
     }
   }
-
   void _signOut() async {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Cerrar Sesión'),
-          content: Text('¿Estás seguro de que quieres cerrar sesión?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, 'no');
-              },
-              child: Text('No'),
-            ),
-            TextButton(
-              onPressed: () async {
-                await _auth.signOut();
-                Navigator.pop(context, 'yes');
-              },
-              child: Text('Sí'),
-            ),
-          ],
-        );
-      },
-    ).then((value) {
-      if (value == 'yes') {
-        Navigator.pop(context);
-      }
-    });
-  }
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text('Cerrar Sesión'),
+        content: Text('¿Estás seguro de que quieres cerrar sesión?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, 'no');
+            },
+            child: Text('No'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await _auth.signOut();
+              Navigator.pop(context, 'yes');
+            },
+            child: Text('Sí'),
+          ),
+        ],
+      );
+    },
+  ).then((value) async {
+    if (value == 'yes') {
+      await _auth.signOut(); // Cerrar sesión nuevamente para asegurarse
+      Navigator.pushReplacement( // Navegar a la pantalla de inicio de sesión
+        context,
+        MaterialPageRoute(builder: (context) => SignInScreen()),
+      );
+    }
+  });
+}
+
 }
 
 class ChatSearchDelegate extends SearchDelegate<String> {
@@ -269,16 +274,18 @@ class ChatSearchDelegate extends SearchDelegate<String> {
       ),
     ];
   }
-
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
       icon: Icon(Icons.arrow_back),
       onPressed: () {
-        close(context, '');
+        close(context, ''); // Cerrar la búsqueda y volver al estado anterior
       },
     );
   }
+
+
+  
 
   @override
   Widget buildResults(BuildContext context) {
