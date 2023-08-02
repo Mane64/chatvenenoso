@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/Uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-
+import 'package:chatvenenoso/screens/config_screen.dart';
 import 'Chatscreen.dart';
 
 class ChannelListScreen extends StatefulWidget {
@@ -63,6 +63,8 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
             onSelected: (value) {
               if (value == 'add_channel') {
                 _showAddChannelDialog();
+              } else if (value == 'settings') {
+                _openConfiguracionScreen();
               } else if (value == 'sign_out') {
                 _signOut();
               }
@@ -152,6 +154,13 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
         },
         child: Icon(Icons.chat),
       ),
+    );
+  }
+
+    void _openConfiguracionScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ConfiguracionScreen()), // Navegar a la pantalla de configuración
     );
   }
 
