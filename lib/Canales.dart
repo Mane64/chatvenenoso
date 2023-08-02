@@ -15,6 +15,7 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _newChannelController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController(); // New controller for search
 
   late String currentUserUID;
 
@@ -30,6 +31,15 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
       appBar: AppBar(
         title: Text('UPPE Chat'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.search),
+            onPressed: () {
+              showSearch(
+                context: context,
+                delegate: ChatSearchDelegate(), // Implement this delegate class
+              );
+            },
+          ),
           PopupMenuButton(
             itemBuilder: (context) => [
               PopupMenuItem(
@@ -40,11 +50,11 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
                 child: Text('Chats archivados'),
                 value: 'archived_chats',
               ),
-               PopupMenuItem(
+              PopupMenuItem(
                 child: Text('Configuracion'),
                 value: 'settings',
               ),
-               PopupMenuItem(
+              PopupMenuItem(
                 child: Text('Cerrar Sesión'),
                 value: 'sign_out',
               ),
@@ -241,5 +251,44 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
         Navigator.pop(context);
       }
     });
+  }
+}
+
+class ChatSearchDelegate extends SearchDelegate<String> {
+  @override
+  String get searchFieldLabel => 'Buscar chat';
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        onPressed: () {
+          query = '';
+        },
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () {
+        close(context, '');
+      },
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    // Implementar la lógica de búsqueda y mostrar resultados
+    return Text('Resultados de búsqueda para: $query');
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    // Mostrar sugerencias mientras el usuario escribe
+    return Text('Sugerencias de búsqueda para: $query');
   }
 }
