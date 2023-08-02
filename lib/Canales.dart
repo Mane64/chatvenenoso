@@ -1,8 +1,11 @@
-import 'package:chatvenenoso/Chatscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:uuid/Uuid.dart'; // Importar el paquete uuid
+import 'package:uuid/Uuid.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+
+
+import 'Chatscreen.dart';
 
 class ChannelListScreen extends StatefulWidget {
   @override
@@ -14,13 +17,12 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _newChannelController = TextEditingController();
 
-  late String currentUserUID; // Definimos la variable currentUserUID
+  late String currentUserUID;
 
   @override
   void initState() {
     super.initState();
-    currentUserUID =
-        _auth.currentUser!.uid; // Obtenemos el UID del usuario actual
+    currentUserUID = _auth.currentUser!.uid;
   }
 
   @override
@@ -28,12 +30,24 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('UPPE Chat'),
-        automaticallyImplyLeading: false, // Eliminar el botón de regresar
         actions: [
-          IconButton(
-            icon: Icon(Icons.more_vert),
-            onPressed: () {
-              _showPopupMenu(); // Mostrar el menú de opciones
+          PopupMenuButton(
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: Text('Nuevo Chat'),
+                value: 'add_channel',
+              ),
+              PopupMenuItem(
+                child: Text('Cerrar Sesión'),
+                value: 'sign_out',
+              ),
+            ],
+            onSelected: (value) {
+              if (value == 'add_channel') {
+                _showAddChannelDialog();
+              } else if (value == 'sign_out') {
+                _signOut();
+              }
             },
           ),
         ],
@@ -50,24 +64,58 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
           List<Widget> channelWidgets = [];
           for (var channel in channels) {
             final channelName = channel.get('name');
-            final channelID = channel.id; // Obtener el ID del canal
+            final channelID = channel.id;
 
-            // Verificamos si el UID del usuario actual está en la lista de usuarios autorizados
             if (channel.get('authorized_users').contains(currentUserUID)) {
-              final channelWidget = ListTile(
-                title: Text(channelName),
+              final channelWidget = GestureDetector(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ChatScreen(
                         channel: channelName,
-                        channelID:
-                            channelID, // Pasar el channelID a la pantalla de chat
+                        channelID: channelID,
                       ),
                     ),
                   );
                 },
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundImage: CachedNetworkImageProvider(
+                          'https://example.com/' + channelID,
+                        ),
+                      ),
+                      SizedBox(width: 16.0),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              channelName,
+                              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 6.0),
+                            Text(
+                              'Último mensaje',
+                              style: TextStyle(fontSize: 14.0, color: Colors.grey),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 16.0),
+                      Text(
+                        '10:30 AM',
+                        style: TextStyle(fontSize: 14.0, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
               );
               channelWidgets.add(channelWidget);
             }
@@ -77,21 +125,34 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _showPopupMenu();
+        },
+        child: Icon(Icons.chat),
+      ),
     );
   }
 
   void _showPopupMenu() {
     final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final relativePosition = RelativeRect.fromLTRB(1000, 80, 0, 0); // Posición relativa para mostrar el menú
+    final relativePosition = RelativeRect.fromLTRB(1000, 80, 0, 0);
 
-    // Mostrar el menú de opciones
     showMenu<String>(
       context: context,
       position: relativePosition,
       items: [
         PopupMenuItem(
-          child: Text('Agregar Nuevo Canal'),
+          child: Text('Nuevo Chat'),
           value: 'add_channel',
+        ),
+        PopupMenuItem(
+          child: Text('Chats archivados'),
+          value: 'archived_chats',
+        ),
+        PopupMenuItem(
+          child: Text('Configuración'),
+          value: 'settings',
         ),
         PopupMenuItem(
           child: Text('Cerrar Sesión'),
@@ -100,11 +161,10 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
       ],
       elevation: 8.0,
     ).then((value) {
-      // Procesar la opción seleccionada del menú
       if (value == 'add_channel') {
-        _showAddChannelDialog(); // Mostrar el cuadro de diálogo para agregar un nuevo canal
+        _showAddChannelDialog();
       } else if (value == 'sign_out') {
-        _signOut(); // Cerrar sesión actual
+        _signOut();
       }
     });
   }
@@ -114,7 +174,7 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Agregar Nuevo Canal'),
+          title: Text('Nuevo Chat'),
           content: TextField(
             controller: _newChannelController,
             decoration: InputDecoration(hintText: 'Nombre del Canal'),
@@ -122,14 +182,14 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Cerrar el cuadro de diálogo
+                Navigator.pop(context);
               },
               child: Text('Cancelar'),
             ),
             TextButton(
               onPressed: () {
-                _addNewChannel(); // Agregar el nuevo canal a Firestore
-                Navigator.pop(context); // Cerrar el cuadro de diálogo
+                _addNewChannel();
+                Navigator.pop(context);
               },
               child: Text('Guardar'),
             ),
@@ -142,9 +202,8 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   void _addNewChannel() {
     final newChannelName = _newChannelController.text.trim();
     if (newChannelName.isNotEmpty) {
-      final channelID = Uuid().v4(); // Obtener un channelID único con uuid
+      final channelID = Uuid().v4();
 
-      // Agregar el nuevo canal a Firestore con el channelID generado
       _firestore.collection('channels').doc(channelID).set({
         'name': newChannelName,
         'authorized_users': [currentUserUID],
@@ -155,7 +214,6 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   }
 
   void _signOut() async {
-    // Mostrar el cuadro de diálogo de confirmación
     showDialog(
       context: context,
       builder: (context) {
@@ -165,14 +223,14 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context, 'no'); // Cerrar el cuadro de diálogo con respuesta 'no'
+                Navigator.pop(context, 'no');
               },
               child: Text('No'),
             ),
             TextButton(
               onPressed: () async {
                 await _auth.signOut();
-                Navigator.pop(context, 'yes'); // Cerrar el cuadro de diálogo con respuesta 'sí'
+                Navigator.pop(context, 'yes');
               },
               child: Text('Sí'),
             ),
@@ -180,9 +238,8 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
         );
       },
     ).then((value) {
-      // Obtener la respuesta del cuadro de diálogo
       if (value == 'yes') {
-        Navigator.pop(context); // Cerrar la pantalla de lista de canales y volver a la pantalla de inicio de sesión
+        Navigator.pop(context);
       }
     });
   }
