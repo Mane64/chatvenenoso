@@ -2,7 +2,7 @@ import 'package:chatvenenoso/Chatscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:uuid/uuid.dart'; // Importar el paquete uuid
+import 'package:uuid/Uuid.dart'; // Importar el paquete uuid
 
 class ChannelListScreen extends StatefulWidget {
   @override
@@ -28,24 +28,12 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('UPPE Chat'),
+        automaticallyImplyLeading: false, // Eliminar el botón de regresar
         actions: [
-          PopupMenuButton(
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                child: Text('Agregar Nuevo Canal'),
-                value: 'add_channel',
-              ),
-              PopupMenuItem(
-                child: Text('Cerrar Sesión'),
-                value: 'sign_out',
-              ),
-            ],
-            onSelected: (value) {
-              if (value == 'add_channel') {
-                _showAddChannelDialog(); // Mostrar el cuadro de diálogo para agregar un nuevo canal
-              } else if (value == 'sign_out') {
-                _signOut(); // Cerrar sesión actual
-              }
+          IconButton(
+            icon: Icon(Icons.more_vert),
+            onPressed: () {
+              _showPopupMenu(); // Mostrar el menú de opciones
             },
           ),
         ],
@@ -90,6 +78,35 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
         },
       ),
     );
+  }
+
+  void _showPopupMenu() {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final relativePosition = RelativeRect.fromLTRB(1000, 80, 0, 0); // Posición relativa para mostrar el menú
+
+    // Mostrar el menú de opciones
+    showMenu<String>(
+      context: context,
+      position: relativePosition,
+      items: [
+        PopupMenuItem(
+          child: Text('Agregar Nuevo Canal'),
+          value: 'add_channel',
+        ),
+        PopupMenuItem(
+          child: Text('Cerrar Sesión'),
+          value: 'sign_out',
+        ),
+      ],
+      elevation: 8.0,
+    ).then((value) {
+      // Procesar la opción seleccionada del menú
+      if (value == 'add_channel') {
+        _showAddChannelDialog(); // Mostrar el cuadro de diálogo para agregar un nuevo canal
+      } else if (value == 'sign_out') {
+        _signOut(); // Cerrar sesión actual
+      }
+    });
   }
 
   void _showAddChannelDialog() {
@@ -138,7 +155,35 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   }
 
   void _signOut() async {
-    await _auth.signOut();
-    Navigator.pop(context); // Cerrar la pantalla de lista de canales y volver a la pantalla de inicio de sesión
+    // Mostrar el cuadro de diálogo de confirmación
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Cerrar Sesión'),
+          content: Text('¿Estás seguro de que quieres cerrar sesión?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, 'no'); // Cerrar el cuadro de diálogo con respuesta 'no'
+              },
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _auth.signOut();
+                Navigator.pop(context, 'yes'); // Cerrar el cuadro de diálogo con respuesta 'sí'
+              },
+              child: Text('Sí'),
+            ),
+          ],
+        );
+      },
+    ).then((value) {
+      // Obtener la respuesta del cuadro de diálogo
+      if (value == 'yes') {
+        Navigator.pop(context); // Cerrar la pantalla de lista de canales y volver a la pantalla de inicio de sesión
+      }
+    });
   }
 }

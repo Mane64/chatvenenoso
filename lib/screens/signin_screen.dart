@@ -16,6 +16,7 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
+  bool _isPasswordVisible = false; // Variable para mostrar u ocultar la contraseña
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +48,22 @@ class _SignInScreenState extends State<SignInScreen> {
                 const SizedBox(
                   height: 20,
                 ),
-                reusableTextField("Ingresa la contraseña", Icons.lock_outline, true, _passwordTextController),
+                Stack(
+                  alignment: Alignment.centerRight,
+                  children: [
+                    reusableTextField("Ingresa la contraseña", Icons.lock_outline, !_isPasswordVisible, _passwordTextController),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible; // Cambiar el estado para mostrar u ocultar la contraseña
+                        });
+                      },
+                      icon: Icon(
+                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(
                   height: 5,
                 ),
