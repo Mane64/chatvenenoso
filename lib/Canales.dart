@@ -37,6 +37,14 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
                 value: 'add_channel',
               ),
               PopupMenuItem(
+                child: Text('Chats archivados'),
+                value: 'archived_chats',
+              ),
+               PopupMenuItem(
+                child: Text('Configuracion'),
+                value: 'settings',
+              ),
+               PopupMenuItem(
                 child: Text('Cerrar Sesión'),
                 value: 'sign_out',
               ),
@@ -148,18 +156,6 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
         PopupMenuItem(
           child: Text('Nuevo Chat'),
           value: 'add_channel',
-        ),
-        PopupMenuItem(
-          child: Text('Chats archivados'),
-          value: 'archived_chats',
-        ),
-        PopupMenuItem(
-          child: Text('Configuración'),
-          value: 'settings',
-        ),
-        PopupMenuItem(
-          child: Text('Cerrar Sesión'),
-          value: 'sign_out',
         ),
       ],
       elevation: 8.0,
