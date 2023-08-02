@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/Uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-
 import 'Chatscreen.dart';
 
 class ChannelListScreen extends StatefulWidget {
@@ -80,13 +79,14 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
                   );
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 30,
                         backgroundImage: CachedNetworkImageProvider(
-                          'https://example.com/' + channelID,
+                          'assets/chat-icon.jpg',
                         ),
                       ),
                       SizedBox(width: 16.0),
@@ -96,12 +96,14 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
                           children: [
                             Text(
                               channelName,
-                              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
                             ),
                             SizedBox(height: 6.0),
                             Text(
                               'Último mensaje',
-                              style: TextStyle(fontSize: 14.0, color: Colors.grey),
+                              style:
+                                  TextStyle(fontSize: 14.0, color: Colors.grey),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -135,7 +137,8 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   }
 
   void _showPopupMenu() {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
     final relativePosition = RelativeRect.fromLTRB(1000, 80, 0, 0);
 
     showMenu<String>(

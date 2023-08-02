@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
-import 'package:uuid/uuid.dart';
 
 class ChatScreen extends StatefulWidget {
   final String channel;
@@ -20,13 +19,12 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _newUserEmailController = TextEditingController();
 
-  late String
-      currentUserName; // Variable para almacenar el nombre del usuario actual
+  late String currentUserName;
 
   @override
   void initState() {
     super.initState();
-    _getUserName(); // Obtener el nombre del usuario actual
+    _getUserName();
   }
 
   @override
@@ -41,8 +39,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           IconButton(
             icon: Icon(Icons.add),
-            onPressed:
-                _showAddUserDialog, // Mostrar el cuadro de diálogo para agregar usuarios
+            onPressed: _showAddUserDialog,
           ),
         ],
       ),
@@ -90,7 +87,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         Text(
                           sender == _auth.currentUser!.uid
                               ? 'Tú'
-                              : currentUserName, // Mostrar el nombre del remitente
+                              : message.get('senderName'),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -156,8 +153,8 @@ class _ChatScreenState extends State<ChatScreen> {
           .collection('chats')
           .add({
         'text': message,
-        'sender': _auth
-            .currentUser!.uid, // Agregar la información del remitente (sender)
+        'sender': _auth.currentUser!.uid,
+        'senderName': currentUserName, // Agregar el nombre del remitente
         'timestamp': FieldValue.serverTimestamp(),
       });
       _messageController.clear();
@@ -183,14 +180,14 @@ class _ChatScreenState extends State<ChatScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Cerrar el cuadro de diálogo
+                Navigator.pop(context);
               },
               child: Text('Cancelar'),
             ),
             TextButton(
               onPressed: () {
-                _addUserToChannel(); // Agregar el usuario al canal
-                Navigator.pop(context); // Cerrar el cuadro de diálogo
+                _addUserToChannel();
+                Navigator.pop(context);
               },
               child: Text('Agregar'),
             ),
@@ -203,7 +200,6 @@ class _ChatScreenState extends State<ChatScreen> {
   void _addUserToChannel() {
     final newUserEmail = _newUserEmailController.text.trim();
     if (newUserEmail.isNotEmpty) {
-      // Buscar el UID del usuario a agregar por su correo electrónico
       _firestore
           .collection('usuarios')
           .where('email', isEqualTo: newUserEmail)
@@ -216,13 +212,11 @@ class _ChatScreenState extends State<ChatScreen> {
           });
           _newUserEmailController.clear();
         } else {
-          // Mostrar un mensaje de error si el usuario no existe
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Usuario no encontrado')),
           );
         }
       }).catchError((error) {
-        // Mostrar un mensaje de error si ocurre algún problema
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al agregar usuario')),
         );
