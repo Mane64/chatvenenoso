@@ -1,9 +1,14 @@
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chatvenenoso/screens/signin_screen.dart';
 import 'package:chatvenenoso/reusable_widgets/reusable_widgets.dart';
 import 'package:chatvenenoso/utils/color_utils.dart';
+import 'package:image_picker/image_picker.dart';
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -16,8 +21,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
   TextEditingController _userNameTextController = TextEditingController();
-  bool _isPasswordVisible =
-      false; // Variable para mostrar u ocultar la contraseña
+
+
+  bool _isPasswordVisible = false; // Variable para mostrar u ocultar la contraseña
+  XFile? _imageFile; // Almacena la imagen seleccionada
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +57,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
             padding: EdgeInsets.fromLTRB(20, 120, 20, 0),
             child: Column(
               children: <Widget>[
+                 GestureDetector(
+                  onTap: _pickImage,
+                  child: Column(
+                    children: [
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: _imageFile != null
+                            ? FileImage(File(_imageFile!.path))
+                            : null,
+                        child: _imageFile == null
+                            ? Icon(
+                                Icons.add,
+                                size: 40,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Seleccione una foto de perfil',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 20),
                 reusableTextField(
                   "Ingresa un nombre de usuario",
@@ -97,6 +132,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      setState(() {
+        _imageFile = pickedImage;
+      });
+    }
+  }
 
   bool isValidEmail(String email) {
     // Expresión regular para validar el correo electrónico
@@ -108,6 +153,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final email = _emailTextController.text.trim();
     final password = _passwordTextController.text.trim();
     final userName = _userNameTextController.text.trim();
+    
+    if (_imageFile != null) {
+      // Subir la imagen al almacenamiento (Firebase Storage)
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images')
+          .child(userName + '.jpg');
+      await storageRef.putFile(File(_imageFile!.path));
+    }
 
     // Validar si algún campo está vacío
     if (userName.isEmpty || email.isEmpty || password.isEmpty) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class ChatScreen extends StatefulWidget {
   final String channel;
@@ -18,6 +19,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _newUserEmailController = TextEditingController();
+
+  final AudioCache _audioCache = AudioCache();
 
   late String currentUserName;
 
@@ -77,8 +80,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         : Alignment.topLeft,
                     margin: EdgeInsets.only(top: 8, bottom: 8),
                     backGroundColor: sender == _auth.currentUser!.uid
-                        ? Colors.black
-                        : Colors.purple,
+                        ? Colors.blue
+                        : Colors.white,
                     child: Column(
                       crossAxisAlignment: sender == _auth.currentUser!.uid
                           ? CrossAxisAlignment.end
@@ -96,7 +99,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         Text(
                           messageText,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: sender == _auth.currentUser!.uid
+                                ? Colors.white
+                                : Colors.black,
                           ),
                         ),
                       ],
@@ -144,22 +149,31 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  void _sendMessage() {
-    String message = _messageController.text.trim();
-    if (message.isNotEmpty) {
-      _firestore
-          .collection('messages')
-          .doc(widget.channelID)
-          .collection('chats')
-          .add({
-        'text': message,
-        'sender': _auth.currentUser!.uid,
-        'senderName': currentUserName, // Agregar el nombre del remitente
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      _messageController.clear();
-    }
+ void _sendMessage() {
+  String message = _messageController.text.trim();
+  if (message.isNotEmpty) {
+    _firestore
+        .collection('messages')
+        .doc(widget.channelID)
+        .collection('chats')
+        .add({
+      'text': message,
+      'sender': _auth.currentUser!.uid,
+      'senderName': currentUserName, // Agregar el nombre del remitente
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    _playSentSound(); // Llama a la función para reproducir el sonido
+    _messageController.clear();
   }
+}
+
+void _playSentSound() async {
+  final player = AudioPlayer(); // Crea una instancia de AudioPlayer
+  await player.play('assets/pop.mp3'); // Reproduce el sonido
+}
+
+  
 
   void _signOut() async {
     await _auth.signOut();
