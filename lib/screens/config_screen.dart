@@ -244,6 +244,17 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
       return;
     }
 
+    // Actualizar el usuario actual en FirebaseAuth
+    try {
+      await _currentUser?.updateEmail(newEmail);
+      await _currentUser?.updateDisplayName(newName);
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('YA EXISTE ESE CORREO USA OTRO')),
+      );
+      return;
+    }
+
     // Realizar la actualización del perfil en Firestore
     final currentUserUID = _currentUser.uid;
     await FirebaseFirestore.instance
@@ -254,8 +265,6 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
       'email': newEmail,
     });
 
-    // Actualizar el usuario actual en FirebaseAuth
-    await _currentUser.updateEmail(newEmail);
     // Actualizar la información mostrada en la pantalla
     setState(() {
       _currentUserName = newName;
@@ -286,7 +295,6 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
       final email = _currentUser.email!;
       final credentials =
           EmailAuthProvider.credential(email: email, password: oldPassword);
-      // Resto del código para reautenticar al usuario y actualizar la contraseña
       try {
         await _currentUser.reauthenticateWithCredential(credentials);
       } catch (error) {

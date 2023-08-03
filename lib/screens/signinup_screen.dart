@@ -9,7 +9,6 @@ import 'package:chatvenenoso/reusable_widgets/reusable_widgets.dart';
 import 'package:chatvenenoso/utils/color_utils.dart';
 import 'package:image_picker/image_picker.dart';
 
-
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
 
@@ -22,8 +21,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _emailTextController = TextEditingController();
   TextEditingController _userNameTextController = TextEditingController();
 
-
-  bool _isPasswordVisible = false; // Variable para mostrar u ocultar la contraseña
+  bool _isPasswordVisible =
+      false; // Variable para mostrar u ocultar la contraseña
   XFile? _imageFile; // Almacena la imagen seleccionada
 
   @override
@@ -57,7 +56,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             padding: EdgeInsets.fromLTRB(20, 120, 20, 0),
             child: Column(
               children: <Widget>[
-                 GestureDetector(
+                GestureDetector(
                   onTap: _pickImage,
                   child: Column(
                     children: [
@@ -132,6 +131,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
   }
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedImage = await picker.pickImage(source: ImageSource.gallery);
@@ -153,165 +153,130 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final email = _emailTextController.text.trim();
     final password = _passwordTextController.text.trim();
     final userName = _userNameTextController.text.trim();
-    
+
     if (_imageFile != null) {
       // Subir la imagen al almacenamiento (Firebase Storage)
       final storageRef = FirebaseStorage.instance
           .ref()
           .child('profile_images')
           .child(userName + '.jpg');
-      await storageRef.putFile(File(_imageFile!.path));
-    }
+      final uploadTask = storageRef.putFile(File(_imageFile!.path));
 
-    // Validar si algún campo está vacío
-    if (userName.isEmpty || email.isEmpty || password.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Campos vacíos'),
-          content: Text('Debes de rellenar todos los campos.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return; // Detener el registro si algún campo está vacío
-    }
+      // Esperar a que se complete la carga de la imagen
+      await uploadTask.whenComplete(() async {
+        // Obtener la URL de la imagen de perfil subida en Firebase Storage
+        final imageUrl = await storageRef.getDownloadURL();
 
-    // Validar que la contraseña tenga al menos 6 caracteres
-    if (password.length < 6) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error de Registro'),
-          content: Text('La contraseña debe tener al menos 6 caracteres.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return; // Detener el registro si la contraseña es demasiado corta
-    }
-
-    // Validar si el correo electrónico es válido
-    if (!isValidEmail(email)) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Error de Registro'),
-          content: Text('Ingresa un correo electrónico válido.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return; // Detener el registro si el correo no es válido
-    }
-
-    try {
-      // Validar si el correo electrónico ya está en uso por otra cuenta
-      final methods =
-          await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
-      if (methods.isNotEmpty) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('Error de Registro'),
-            content: Text('Este correo ya está en uso por otra cuenta.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('OK'),
-              ),
-            ],
-          ),
-        );
-        return; // Detener el registro si el correo ya está en uso
-      }
-
-      final UserCredential userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // Obtener el UID del usuario recién registrado
-      final newUserUID = userCredential.user!.uid;
-
-      // Agregar los datos del usuario a la colección 'usuarios' en Firestore
-      await FirebaseFirestore.instance
-          .collection('usuarios')
-          .doc(newUserUID)
-          .set({
-        'nombre': userName, // Agregar el nombre de usuario
-        'email': email,
-        'uid': newUserUID,
-        'friends': FieldValue.arrayUnion(["ibyu0jeJRtUHDTGW09B6pYN4l0C3"]),
-      });
-
-      print("Created New Account");
-
-      // Mostrar el cuadro de diálogo con el mensaje de cuenta creada
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Cuenta Creada'),
-          content: Text('¡La cuenta ha sido creada con éxito!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    transitionDuration: Duration(milliseconds: 500),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                      var begin = Offset(1.0, 0.0);
-                      var end = Offset.zero;
-                      var tween = Tween(begin: begin, end: end);
-                      var offsetAnimation = animation.drive(tween);
-                      return SlideTransition(
-                        position: offsetAnimation,
-                        child: child,
-                      );
+        // Resto del código para registrar al usuario y agregar los datos en Firestore
+        try {
+          // Validar si el correo electrónico ya está en uso por otra cuenta
+          final methods =
+              await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+          if (methods.isNotEmpty) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Error de Registro'),
+                content: Text('Este correo ya está en uso por otra cuenta.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
                     },
-                    pageBuilder: (context, animation, secondaryAnimation) {
-                      return SignInScreen();
-                    },
+                    child: Text('OK'),
                   ),
-                );
-              },
-              child: Text('OK'),
+                ],
+              ),
+            );
+            return; // Detener el registro si el correo ya está en uso
+          }
+
+          final UserCredential userCredential =
+              await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
+
+          // Obtener el UID del usuario recién registrado
+          final newUserUID = userCredential.user!.uid;
+
+          // Agregar los datos del usuario a la colección 'usuarios' en Firestore
+          await FirebaseFirestore.instance
+              .collection('usuarios')
+              .doc(newUserUID)
+              .set({
+            'nombre': userName, // Agregar el nombre de usuario
+            'email': email,
+            'uid': newUserUID,
+            'imageUrl': imageUrl, // Agregar la URL de la imagen de perfil
+            'friends': FieldValue.arrayUnion(["ibyu0jeJRtUHDTGW09B6pYN4l0C3"]),
+          });
+
+          print("Created New Account");
+
+          // Mostrar el cuadro de diálogo con el mensaje de cuenta creada
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Cuenta Creada'),
+              content: Text('¡La cuenta ha sido creada con éxito!'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.pushReplacement(
+                      context,
+                      PageRouteBuilder(
+                        transitionDuration: Duration(milliseconds: 500),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                          var begin = Offset(1.0, 0.0);
+                          var end = Offset.zero;
+                          var tween = Tween(begin: begin, end: end);
+                          var offsetAnimation = animation.drive(tween);
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
+                        pageBuilder: (context, animation, secondaryAnimation) {
+                          return SignInScreen();
+                        },
+                      ),
+                    );
+                  },
+                  child: Text('OK'),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    } catch (e) {
-      print('Error de registro: $e');
-      // Mostrar mensaje de error si el registro falla
+          );
+        } catch (e) {
+          print('Error de registro: $e');
+          // Mostrar mensaje de error si el registro falla
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Error de Registro'),
+              content: Text('Hubo un error al registrar la cuenta.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      });
+    } else {
+      // Mostrar un mensaje de error si el usuario no seleccionó una imagen de perfil
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Error de Registro'),
-          content: Text('Hubo un error al registrar la cuenta.'),
+          title: Text('Imagen de Perfil'),
+          content: Text('Por favor, seleccione una foto de perfil.'),
           actions: [
             TextButton(
               onPressed: () {

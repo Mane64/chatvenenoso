@@ -5,6 +5,7 @@ import 'package:chatvenenoso/screens/reset_password.dart';
 import 'package:chatvenenoso/screens/signinup_screen.dart';
 import 'package:chatvenenoso/utils/color_utils.dart';
 import 'package:chatvenenoso/Canales.dart';
+import 'package:chatvenenoso/foto.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -16,7 +17,8 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
-  bool _isPasswordVisible = false; // Variable para mostrar u ocultar la contraseña
+  bool _isPasswordVisible =
+      false; // Variable para mostrar u ocultar la contraseña
 
   @override
   Widget build(BuildContext context) {
@@ -37,29 +39,38 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
         child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).size.height * 0.2, 20, 0),
+            padding: EdgeInsets.fromLTRB(
+                20, MediaQuery.of(context).size.height * 0.2, 20, 0),
             child: Column(
               children: <Widget>[
                 logoWidget("assets/LOGOUPPECOLOR.png"),
                 const SizedBox(
                   height: 30,
                 ),
-                reusableTextField("Ingresa tu correo", Icons.person_outline, false, _emailTextController),
+                reusableTextField("Ingresa tu correo", Icons.person_outline,
+                    false, _emailTextController),
                 const SizedBox(
                   height: 20,
                 ),
                 Stack(
                   alignment: Alignment.centerRight,
                   children: [
-                    reusableTextField("Ingresa la contraseña", Icons.lock_outline, !_isPasswordVisible, _passwordTextController),
+                    reusableTextField(
+                        "Ingresa la contraseña",
+                        Icons.lock_outline,
+                        !_isPasswordVisible,
+                        _passwordTextController),
                     IconButton(
                       onPressed: () {
                         setState(() {
-                          _isPasswordVisible = !_isPasswordVisible; // Cambiar el estado para mostrar u ocultar la contraseña
+                          _isPasswordVisible =
+                              !_isPasswordVisible; // Cambiar el estado para mostrar u ocultar la contraseña
                         });
                       },
                       icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                     ),
                   ],
@@ -68,7 +79,8 @@ class _SignInScreenState extends State<SignInScreen> {
                   height: 5,
                 ),
                 forgetPassword(context),
-                firebaseUIButton(context, "Ingresar", _signInUser), // Modificación aquí
+                firebaseUIButton(
+                    context, "Ingresar", _signInUser), // Modificación aquí
                 signUpOption()
               ],
             ),
@@ -82,14 +94,16 @@ class _SignInScreenState extends State<SignInScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("¿No tienes cuenta?", style: TextStyle(color: Colors.white70)),
+        const Text("¿No tienes cuenta?",
+            style: TextStyle(color: Colors.white70)),
         GestureDetector(
           onTap: () {
             Navigator.push(
               context,
               PageRouteBuilder(
                 transitionDuration: Duration(milliseconds: 500),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   var begin = Offset(1.0, 0.0);
                   var end = Offset.zero;
                   var tween = Tween(begin: begin, end: end);
@@ -130,7 +144,8 @@ class _SignInScreenState extends State<SignInScreen> {
             context,
             PageRouteBuilder(
               transitionDuration: Duration(milliseconds: 500),
-              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
                 var begin = Offset(1.0, 0.0);
                 var end = Offset.zero;
                 var tween = Tween(begin: begin, end: end);
@@ -141,7 +156,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 );
               },
               pageBuilder: (context, animation, secondaryAnimation) {
-                return ResetPassword();
+                return MyApp(); //ddddddddd
               },
             ),
           );
@@ -160,7 +175,8 @@ class _SignInScreenState extends State<SignInScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Error de Inicio de Sesión'),
-          content: Text('Debes rellenar todos los campos con tus credenciales.'),
+          content:
+              Text('Debes rellenar todos los campos con tus credenciales.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -202,7 +218,8 @@ class _SignInScreenState extends State<SignInScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Error de Inicio de Sesión'),
-          content: Text('Hubo un error al iniciar sesión. Verifica tus credenciales e intenta nuevamente.'),
+          content: Text(
+              'Hubo un error al iniciar sesión. Verifica tus credenciales e intenta nuevamente.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -210,8 +227,7 @@ class _SignInScreenState extends State<SignInScreen> {
               },
               child: Text(
                 'OK',
-                style: TextStyle(color: Colors.blue), 
-
+                style: TextStyle(color: Colors.blue),
               ),
             ),
           ],
