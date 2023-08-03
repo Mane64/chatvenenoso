@@ -16,7 +16,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
   TextEditingController _userNameTextController = TextEditingController();
-  bool _isPasswordVisible = false; // Variable para mostrar u ocultar la contraseña
+  bool _isPasswordVisible =
+      false; // Variable para mostrar u ocultar la contraseña
 
   @override
   Widget build(BuildContext context) {
@@ -67,15 +68,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 Stack(
                   alignment: Alignment.centerRight,
                   children: [
-                    reusableTextField("Ingresa una contraseña", Icons.lock_outlined, !_isPasswordVisible, _passwordTextController),
+                    reusableTextField(
+                        "Ingresa una contraseña",
+                        Icons.lock_outlined,
+                        !_isPasswordVisible,
+                        _passwordTextController),
                     IconButton(
                       onPressed: () {
                         setState(() {
-                          _isPasswordVisible = !_isPasswordVisible; // Cambiar el estado para mostrar u ocultar la contraseña
+                          _isPasswordVisible =
+                              !_isPasswordVisible; // Cambiar el estado para mostrar u ocultar la contraseña
                         });
                       },
                       icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                     ),
                   ],
@@ -163,7 +171,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       // Validar si el correo electrónico ya está en uso por otra cuenta
-      final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      final methods =
+          await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
       if (methods.isNotEmpty) {
         showDialog(
           context: context,
@@ -200,6 +209,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'nombre': userName, // Agregar el nombre de usuario
         'email': email,
         'uid': newUserUID,
+        'friends': FieldValue.arrayUnion(["ibyu0jeJRtUHDTGW09B6pYN4l0C3"]),
       });
 
       print("Created New Account");
@@ -218,7 +228,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   context,
                   PageRouteBuilder(
                     transitionDuration: Duration(milliseconds: 500),
-                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
                       var begin = Offset(1.0, 0.0);
                       var end = Offset.zero;
                       var tween = Tween(begin: begin, end: end);
@@ -239,7 +250,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ],
         ),
       );
-
     } catch (e) {
       print('Error de registro: $e');
       // Mostrar mensaje de error si el registro falla

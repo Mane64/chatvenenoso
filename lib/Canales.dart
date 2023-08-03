@@ -16,7 +16,8 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _newChannelController = TextEditingController();
-  final TextEditingController _searchController = TextEditingController(); // New controller for search
+  final TextEditingController _searchController =
+      TextEditingController(); // New controller for search
 
   late String currentUserUID;
 
@@ -30,7 +31,7 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('UPPE Chat'),
+        title: Text('UPP VIBORE SA. DE CV.'),
         actions: [
           IconButton(
             icon: Icon(Icons.search),
@@ -157,10 +158,12 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
     );
   }
 
-    void _openConfiguracionScreen() {
+  void _openConfiguracionScreen() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ConfiguracionScreen()), // Navegar a la pantalla de configuración
+      MaterialPageRoute(
+          builder: (context) =>
+              ConfiguracionScreen()), // Navegar a la pantalla de configuración
     );
   }
 
@@ -231,41 +234,42 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
       _newChannelController.clear();
     }
   }
-  void _signOut() async {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text('Cerrar Sesión'),
-        content: Text('¿Estás seguro de que quieres cerrar sesión?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, 'no');
-            },
-            child: Text('No'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await _auth.signOut();
-              Navigator.pop(context, 'yes');
-            },
-            child: Text('Sí'),
-          ),
-        ],
-      );
-    },
-  ).then((value) async {
-    if (value == 'yes') {
-      await _auth.signOut(); // Cerrar sesión nuevamente para asegurarse
-      Navigator.pushReplacement( // Navegar a la pantalla de inicio de sesión
-        context,
-        MaterialPageRoute(builder: (context) => SignInScreen()),
-      );
-    }
-  });
-}
 
+  void _signOut() async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Cerrar Sesión'),
+          content: Text('¿Estás seguro de que quieres cerrar sesión?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, 'no');
+              },
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await _auth.signOut();
+                Navigator.pop(context, 'yes');
+              },
+              child: Text('Sí'),
+            ),
+          ],
+        );
+      },
+    ).then((value) async {
+      if (value == 'yes') {
+        await _auth.signOut(); // Cerrar sesión nuevamente para asegurarse
+        Navigator.pushReplacement(
+          // Navegar a la pantalla de inicio de sesión
+          context,
+          MaterialPageRoute(builder: (context) => SignInScreen()),
+        );
+      }
+    });
+  }
 }
 
 class ChatSearchDelegate extends SearchDelegate<String> {
@@ -283,6 +287,7 @@ class ChatSearchDelegate extends SearchDelegate<String> {
       ),
     ];
   }
+
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
@@ -292,9 +297,6 @@ class ChatSearchDelegate extends SearchDelegate<String> {
       },
     );
   }
-
-
-  
 
   @override
   Widget buildResults(BuildContext context) {

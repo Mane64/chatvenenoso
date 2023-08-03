@@ -31,7 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat'),
+        title: Text(widget.channel),
         actions: [
           IconButton(
             icon: Icon(Icons.exit_to_app),
