@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chatvenenoso/screens/help_screen.dart';
 
 class ConfiguracionScreen extends StatefulWidget {
   @override
@@ -53,8 +54,6 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
           _buildNotificaciones(),
           Divider(),
           _buildGuardarAutomaticamente(),
-          Divider(),
-          _buildOpcionesChat(),
           Divider(),
           _buildCuenta(),
           Divider(),
@@ -111,14 +110,6 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
     );
   }
 
-  Widget _buildOpcionesChat() {
-    return ListTile(
-      title: Text('Opciones de Chat'),
-      onTap: () {
-        // Acción cuando se toca la opción de chat
-      },
-    );
-  }
 
   Widget _buildCuenta() {
     return ListTile(
@@ -133,7 +124,11 @@ class _ConfiguracionScreenState extends State<ConfiguracionScreen> {
     return ListTile(
       title: Text('Ayuda'),
       onTap: () {
-        // Acción cuando se toca la opción de ayuda
+        // Navega a la pantalla de ayuda cuando se presione el botón "Ayuda"
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HelpScreen()),
+        );
       },
     );
   }

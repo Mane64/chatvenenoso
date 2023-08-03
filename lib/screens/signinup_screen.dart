@@ -20,9 +20,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
   TextEditingController _userNameTextController = TextEditingController();
+  bool _forceUpdate = false; // Variable para forzar la actualización
 
-  bool _isPasswordVisible =
-      false; // Variable para mostrar u ocultar la contraseña
+  bool _isPasswordVisible = false; // Variable para mostrar u ocultar la contraseña
   XFile? _imageFile; // Almacena la imagen seleccionada
 
   @override
@@ -85,6 +85,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    // Llama a la función para refrescar la vista
+                    setState(() {});
+                  },
+                  child: Text('Guardar imagen'),
+                ),
+                const SizedBox(height: 20),
                 reusableTextField(
                   "Ingresa un nombre de usuario",
                   Icons.person_outline,
@@ -138,7 +146,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     if (pickedImage != null) {
       setState(() {
-        _imageFile = pickedImage;
+        _imageFile = pickedImage; // Actualizar la variable _imageFile
       });
     }
   }
