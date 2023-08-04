@@ -19,15 +19,20 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _newUserEmailController = TextEditingController();
-
+  List<Map<String, dynamic>> _chatUsersData =
+      []; // Lista de datos de usuarios en el chat
   final AudioCache _audioCache = AudioCache();
 
   late String currentUserName;
+
+  List<String> _chatUsers = []; // Lista de usuarios en el chat
 
   @override
   void initState() {
     super.initState();
     _getUserName();
+    _getChatUsers();
+    _getUserData();
   }
 
   @override
@@ -36,13 +41,33 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Text(widget.channel),
         actions: [
-          IconButton(
-            icon: Icon(Icons.exit_to_app),
-            onPressed: _signOut,
-          ),
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _showAddUserDialog,
+          // Agregar el PopUpMenuButton a la lista de acciones del app bar
+          PopupMenuButton(
+            icon: Icon(Icons.more_vert),
+            itemBuilder: (context) {
+              return [
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(Icons.chat),
+                    title: Text('Ver usuarios en el chat'),
+                    onTap: () {
+                      Navigator.of(context).pop(); // Cerrar el menú emergente
+                      _showChatUsersDialog(); // Mostrar el cuadro de diálogo con los usuarios en el chat
+                    },
+                  ),
+                ),
+                PopupMenuItem(
+                  child: ListTile(
+                    leading: Icon(Icons.person_add),
+                    title: Text('Agregar Usuario al Canal'),
+                    onTap: () {
+                      Navigator.of(context).pop(); // Cerrar el menú emergente
+                      _showAddUserDialog(); // Mostrar el cuadro de diálogo para agregar usuario al canal
+                    },
+                  ),
+                ),
+              ];
+            },
           ),
         ],
       ),
@@ -234,5 +259,75 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       });
     }
+  }
+
+  void _removeUserFromChat(String userId) {
+    setState(() {
+      _chatUsers.remove(userId);
+    });
+    _firestore.collection('channels').doc(widget.channelID).update({
+      'authorized_users': FieldValue.arrayRemove([userId]),
+    });
+  }
+
+  // Función para mostrar un cuadro de diálogo con los usuarios en el chat
+  void _showChatUsersDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Usuarios en el Chat'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var userData in _chatUsersData)
+                ListTile(
+                  title: Text(userData['nombre']),
+                  subtitle: Text(userData['email']),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      _removeUserFromChat(userData['uid']);
+                      Navigator.pop(context);
+                    },
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _getChatUsers() async {
+    final channelSnapshot =
+        await _firestore.collection('channels').doc(widget.channelID).get();
+    final users = channelSnapshot.get('authorized_users');
+    setState(() {
+      _chatUsers = List<String>.from(users);
+    });
+  }
+
+  void _getUserData() async {
+    List<Map<String, dynamic>> usersData = [];
+    for (String userId in _chatUsers) {
+      final userSnapshot =
+          await _firestore.collection('usuarios').doc(userId).get();
+      final userData = userSnapshot.data();
+      if (userData != null) {
+        usersData.add(userData);
+      }
+    }
+    setState(() {
+      _chatUsersData = usersData;
+    });
   }
 }
