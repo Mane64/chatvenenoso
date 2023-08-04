@@ -149,31 +149,29 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
- void _sendMessage() {
-  String message = _messageController.text.trim();
-  if (message.isNotEmpty) {
-    _firestore
-        .collection('messages')
-        .doc(widget.channelID)
-        .collection('chats')
-        .add({
-      'text': message,
-      'sender': _auth.currentUser!.uid,
-      'senderName': currentUserName, // Agregar el nombre del remitente
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+  void _sendMessage() {
+    String message = _messageController.text.trim();
+    if (message.isNotEmpty) {
+      _firestore
+          .collection('messages')
+          .doc(widget.channelID)
+          .collection('chats')
+          .add({
+        'text': message,
+        'sender': _auth.currentUser!.uid,
+        'senderName': currentUserName, // Agregar el nombre del remitente
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
-    _playSentSound(); // Llama a la función para reproducir el sonido
-    _messageController.clear();
+      _playSentSound(); // Llama a la función para reproducir el sonido
+      _messageController.clear();
+    }
   }
-}
 
-void _playSentSound() async {
-  final player = AudioPlayer(); // Crea una instancia de AudioPlayer
-  await player.play('assets/pop.mp3'); // Reproduce el sonido
-}
-
-  
+  void _playSentSound() async {
+    final player = AudioPlayer(); // Crea una instancia de AudioPlayer
+    await player.play(UrlSource('assets/pop.mp3')); // Reproduce el sonido
+  }
 
   void _signOut() async {
     await _auth.signOut();
