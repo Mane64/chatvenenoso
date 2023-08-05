@@ -10,6 +10,7 @@ import 'Chatscreen.dart';
 class ChannelListScreen extends StatefulWidget {
   @override
   _ChannelListScreenState createState() => _ChannelListScreenState();
+  
 }
 
 class _ChannelListScreenState extends State<ChannelListScreen> {
@@ -17,7 +18,9 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _newChannelController = TextEditingController();
   final TextEditingController _searchController =
-      TextEditingController(); // New controller for search
+   TextEditingController(); // New controller for search
+   Map<String, String> lastMessages = {};
+
 
   late String currentUserUID;
 
@@ -26,6 +29,31 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
     super.initState();
     currentUserUID = _auth.currentUser!.uid;
   }
+    Future<String> getLastMessage(String channelID) async {
+   print("Getting last message for channel: $channelID"); // Imprime el mensaje de depuración
+
+  final querySnapshot = await _firestore
+      .collection('channels')
+      .doc(channelID)
+      .collection('messages')
+      .orderBy('timestamp', descending: true)
+      .limit(1)
+      .get();
+
+  if (querySnapshot.docs.isNotEmpty) {
+    final lastMessage = querySnapshot.docs.first.get('text');
+    print("Last message for channel $channelID: $lastMessage"); // Imprime el último mensaje obtenido
+    return lastMessage;
+  } else {
+    print("No messages for channel $channelID"); // Imprime si no hay mensajes
+    return 'Sin mensajes';
+  }
+}
+
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -86,63 +114,83 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
           for (var channel in channels) {
             final channelName = channel.get('name');
             final channelID = channel.id;
-
-            if (channel.get('authorized_users').contains(currentUserUID)) {
-              final channelWidget = GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        channel: channelName,
-                        channelID: channelID,
+              if (channel.get('authorized_users').contains(currentUserUID)) {
+                final channelWidget = GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          channel: channelName,
+                          channelID: channelID,
+                        ),
                       ),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundImage: CachedNetworkImageProvider(
+                            'assets/chat-icon.jpg',
+                          ),
+                        ),
+                        SizedBox(width: 16.0),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                channelName,
+                                style: TextStyle(
+                                    fontSize: 16.0, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 6.0),
+                              FutureBuilder<String>(
+                                future: getLastMessage(channelID),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Text(
+                                      'Cargando...',
+                                      style: TextStyle(
+                                          fontSize: 14.0, color: Colors.grey),
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return Text(
+                                      'Error al obtener el último mensaje',
+                                      style: TextStyle(
+                                          fontSize: 14.0, color: Colors.grey),
+                                    );
+                                  } else {
+                                    final lastMessage =
+                                        snapshot.data ?? 'Sin mensajes';
+                                    return Text(
+                                      lastMessage,
+                                      style: TextStyle(
+                                          fontSize: 14.0, color: Colors.grey),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 16.0),
+                        Text(
+                          '10:30 AM',
+                          style: TextStyle(fontSize: 14.0, color: Colors.grey),
+                        ),
+                      ],
                     ),
-                  );
-                },
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundImage: CachedNetworkImageProvider(
-                          'assets/chat-icon.jpg',
-                        ),
-                      ),
-                      SizedBox(width: 16.0),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              channelName,
-                              style: TextStyle(
-                                  fontSize: 16.0, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: 6.0),
-                            Text(
-                              'Último mensaje',
-                              style:
-                                  TextStyle(fontSize: 14.0, color: Colors.grey),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 16.0),
-                      Text(
-                        '10:30 AM',
-                        style: TextStyle(fontSize: 14.0, color: Colors.grey),
-                      ),
-                    ],
                   ),
-                ),
-              );
-              channelWidgets.add(channelWidget);
-            }
+                );
+                channelWidgets.add(channelWidget);
+              }
           }
           return ListView(
             children: channelWidgets,
