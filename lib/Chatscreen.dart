@@ -1,8 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+
 
 class ChatScreen extends StatefulWidget {
   final String channel;
@@ -22,8 +26,10 @@ class _ChatScreenState extends State<ChatScreen> {
   List<Map<String, dynamic>> _chatUsersData =
       []; // Lista de datos de usuarios en el chat
   final AudioCache _audioCache = AudioCache();
+  bool _showEmojiPicker = false;
 
   late String currentUserName;
+  File? _selectedImage;
 
   List<String> _chatUsers = []; // Lista de usuarios en el chat
 
@@ -33,6 +39,26 @@ class _ChatScreenState extends State<ChatScreen> {
     _getUserName();
     _getChatUsers();
     _getUserData();
+  }
+
+  Future<void> _attachFile() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _takePicture() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
   }
 
   @override
@@ -143,27 +169,75 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(
-                      hintText: 'Escribe tu mensaje...',
-                    ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                color: Colors.grey[200], // Color de fondo similar a WhatsApp
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.emoji_emotions), // Add the emoji icon
+                        onPressed: () {
+                          setState(() {
+                            _showEmojiPicker = !_showEmojiPicker; // Toggle the emoji picker visibility
+                          });
+                        },
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          decoration: InputDecoration(
+                            hintText: 'Escribe tu mensaje...',
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 16.0,
+                            ),
+                            border: InputBorder.none, // Quitar el borde
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.attach_file), // Cambiar icono a adjuntar
+                        onPressed: _attachFile,
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.camera_alt), // Cambiar icono a cámara
+                        onPressed: _takePicture,
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.send),
+                        onPressed: _sendMessage,
+                      ),
+                    ],
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
+                ],
+              ),
             ),
           ),
+          if (_showEmojiPicker)
+            EmojiPicker(
+              onEmojiSelected: (emoji, category) {
+                _messageController.text += emoji.emoji; // Append emoji to the text field
+              },
+              config: Config(
+                columns: 7,
+                emojiSizeMax: 32.0,
+                verticalSpacing: 0,
+                horizontalSpacing: 0,
+                initCategory: Category.RECENT,
+              ),
+            ),
         ],
       ),
     );
   }
+
+  
+
 
   void _getUserName() async {
     final currentUserUID = _auth.currentUser!.uid;
@@ -330,4 +404,6 @@ class _ChatScreenState extends State<ChatScreen> {
       _chatUsersData = usersData;
     });
   }
+
+ 
 }
