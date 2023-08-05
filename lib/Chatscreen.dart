@@ -6,10 +6,11 @@ import 'package:flutter_chat_bubble/chat_bubble.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
-
+import 'package:flutter/foundation.dart' as foundation;
+import 'package:chatvenenoso/ChatSettingsScreen.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String channel;
+  late final String channel;
   final String channelID;
 
   ChatScreen({required this.channel, required this.channelID});
@@ -23,15 +24,12 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _messageController = TextEditingController();
   final TextEditingController _newUserEmailController = TextEditingController();
-  List<Map<String, dynamic>> _chatUsersData =
-      []; // Lista de datos de usuarios en el chat
+  List<Map<String, dynamic>> _chatUsersData = [];
   final AudioCache _audioCache = AudioCache();
   bool _showEmojiPicker = false;
-
   late String currentUserName;
   File? _selectedImage;
-
-  List<String> _chatUsers = []; // Lista de usuarios en el chat
+  List<String> _chatUsers = [];
 
   @override
   void initState() {
@@ -67,18 +65,17 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Text(widget.channel),
         actions: [
-          // Agregar el PopUpMenuButton a la lista de acciones del app bar
           PopupMenuButton(
             icon: Icon(Icons.more_vert),
             itemBuilder: (context) {
               return [
                 PopupMenuItem(
                   child: ListTile(
-                    leading: Icon(Icons.chat),
-                    title: Text('Ver usuarios en el chat'),
+                    leading: Icon(Icons.settings),
+                    title: Text('Configuración del Chat'),
                     onTap: () {
                       Navigator.of(context).pop(); // Cerrar el menú emergente
-                      _showChatUsersDialog(); // Mostrar el cuadro de diálogo con los usuarios en el chat
+                      _navigateToChatSettingsScreen();
                     },
                   ),
                 ),
@@ -87,8 +84,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     leading: Icon(Icons.person_add),
                     title: Text('Agregar Usuario al Canal'),
                     onTap: () {
-                      Navigator.of(context).pop(); // Cerrar el menú emergente
-                      _showAddUserDialog(); // Mostrar el cuadro de diálogo para agregar usuario al canal
+                      Navigator.of(context).pop();
+                      _showAddUserDialog();
                     },
                   ),
                 ),
@@ -172,7 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(30),
-                color: Colors.grey[200], // Color de fondo similar a WhatsApp
+                color: Colors.grey[200],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -180,11 +177,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   Row(
                     children: [
                       IconButton(
-                        icon: Icon(Icons.emoji_emotions), // Add the emoji icon
+                        icon: Icon(Icons.emoji_emotions),
                         onPressed: () {
-                          setState(() {
-                            _showEmojiPicker = !_showEmojiPicker; // Toggle the emoji picker visibility
-                          });
+                          setState(() => _showEmojiPicker = !_showEmojiPicker);
                         },
                       ),
                       Expanded(
@@ -196,16 +191,16 @@ class _ChatScreenState extends State<ChatScreen> {
                               horizontal: 16.0,
                               vertical: 16.0,
                             ),
-                            border: InputBorder.none, // Quitar el borde
+                            border: InputBorder.none,
                           ),
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.attach_file), // Cambiar icono a adjuntar
+                        icon: Icon(Icons.attach_file),
                         onPressed: _attachFile,
                       ),
                       IconButton(
-                        icon: Icon(Icons.camera_alt), // Cambiar icono a cámara
+                        icon: Icon(Icons.camera_alt),
                         onPressed: _takePicture,
                       ),
                       IconButton(
@@ -219,25 +214,25 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           if (_showEmojiPicker)
-            EmojiPicker(
-              onEmojiSelected: (emoji, category) {
-                _messageController.text += emoji.emoji; // Append emoji to the text field
-              },
-              config: Config(
-                columns: 7,
-                emojiSizeMax: 32.0,
-                verticalSpacing: 0,
-                horizontalSpacing: 0,
-                initCategory: Category.RECENT,
+            Expanded(
+              child: SizedBox(
+                height: 36,
+                child: EmojiPicker(
+                  textEditingController: _messageController,
+                  config: Config(
+                    columns: 7,
+                    emojiSizeMax: 32 *
+                        (foundation.defaultTargetPlatform == TargetPlatform.iOS
+                            ? 1.30
+                            : 1.0),
+                  ),
+                ),
               ),
             ),
         ],
       ),
     );
   }
-
-  
-
 
   void _getUserName() async {
     final currentUserUID = _auth.currentUser!.uid;
@@ -405,5 +400,28 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
- 
+  void _navigateToChatSettingsScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatSettingsScreen(channelID: widget.channelID),
+      ),
+    );
+
+    if (result != null) {
+      // Si el resultado no es nulo, actualiza el nombre del chat en esta pantalla
+      setState(() {
+        widget.channel = result;
+      });
+    }
+  }
+
+  void _getChatName() async {
+    final channelSnapshot =
+        await _firestore.collection('channels').doc(widget.channelID).get();
+    final chatName = channelSnapshot.get('name');
+    setState(() {
+      widget.channel = chatName;
+    });
+  }
 }
