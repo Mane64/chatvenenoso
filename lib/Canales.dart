@@ -138,7 +138,7 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
             final channelName = channel.get('name');
             final channelID = channel.id;
             if (channel.get('authorized_users').contains(currentUserUID)) {
-              final channelWidget = GestureDetector(
+              final channelWidget = InkWell(
                 onTap: () {
                   Navigator.push(
                     context,
