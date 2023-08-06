@@ -6,11 +6,11 @@ import 'package:uuid/Uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatvenenoso/screens/config_screen.dart';
 import 'Chatscreen.dart';
+import 'package:intl/intl.dart';
 
 class ChannelListScreen extends StatefulWidget {
   @override
   _ChannelListScreenState createState() => _ChannelListScreenState();
-  
 }
 
 class _ChannelListScreenState extends State<ChannelListScreen> {
@@ -18,9 +18,8 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _newChannelController = TextEditingController();
   final TextEditingController _searchController =
-   TextEditingController(); // New controller for search
-   Map<String, String> lastMessages = {};
-
+      TextEditingController(); // New controller for search
+  Map<String, String> lastMessages = {};
 
   late String currentUserUID;
 
@@ -29,31 +28,55 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
     super.initState();
     currentUserUID = _auth.currentUser!.uid;
   }
-    Future<String> getLastMessage(String channelID) async {
-   print("Getting last message for channel: $channelID"); // Imprime el mensaje de depuración
 
-  final querySnapshot = await _firestore
-      .collection('channels')
-      .doc(channelID)
-      .collection('messages')
-      .orderBy('timestamp', descending: true)
-      .limit(1)
-      .get();
+  Future<String> getLastMessage(String channelID) async {
+    print(
+        "Getting last message for channel: $channelID"); // Imprime el mensaje de depuración
 
-  if (querySnapshot.docs.isNotEmpty) {
-    final lastMessage = querySnapshot.docs.first.get('text');
-    print("Last message for channel $channelID: $lastMessage"); // Imprime el último mensaje obtenido
-    return lastMessage;
-  } else {
-    print("No messages for channel $channelID"); // Imprime si no hay mensajes
-    return 'Sin mensajes';
+    final querySnapshot = await _firestore
+        .collection('messages')
+        .doc(channelID)
+        .collection('chats')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final lastMessage = querySnapshot.docs.first.get('text');
+      print(
+          "Last message for channel $channelID: $lastMessage"); // Imprime el último mensaje obtenido
+      return lastMessage;
+    } else {
+      print("No messages for channel $channelID"); // Imprime si no hay mensajes
+      return 'Sin mensajes';
+    }
   }
-}
 
+  Future<String> getLastMessageTime(String channelID) async {
+    print("Getting last message time for channel: $channelID");
 
+    final querySnapshot = await _firestore
+        .collection('messages')
+        .doc(channelID)
+        .collection('chats')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
 
+    if (querySnapshot.docs.isNotEmpty) {
+      final lastMessageDoc = querySnapshot.docs.first;
+      final timestamp = lastMessageDoc.get('timestamp');
 
-
+      final time =
+          DateTime.fromMillisecondsSinceEpoch(timestamp.seconds * 1000);
+      final formattedTime = DateFormat.jm().format(time);
+      print("Last message time for channel $channelID: $formattedTime");
+      return formattedTime;
+    } else {
+      print("No messages for channel $channelID");
+      return '10:30 AM';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +89,7 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
             onPressed: () {
               showSearch(
                 context: context,
-                delegate: ChatSearchDelegate(), // Implement this delegate class
+                delegate: ChatSearchDelegate(),
               );
             },
           ),
@@ -114,83 +137,112 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
           for (var channel in channels) {
             final channelName = channel.get('name');
             final channelID = channel.id;
-              if (channel.get('authorized_users').contains(currentUserUID)) {
-                final channelWidget = GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatScreen(
-                          channel: channelName,
-                          channelID: channelID,
+            if (channel.get('authorized_users').contains(currentUserUID)) {
+              final channelWidget = GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        channel: channelName,
+                        channelID: channelID,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundImage: CachedNetworkImageProvider(
+                          'assets/chat-icon.jpg',
                         ),
                       ),
-                    );
-                  },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundImage: CachedNetworkImageProvider(
-                            'assets/chat-icon.jpg',
-                          ),
+                      SizedBox(width: 16.0),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              channelName,
+                              style: TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 6.0),
+                            FutureBuilder<String>(
+                              future: getLastMessage(channelID),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Text(
+                                    'Cargando...',
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                  );
+                                } else if (snapshot.hasError) {
+                                  return Text(
+                                    'Error al obtener el último mensaje',
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                  );
+                                } else {
+                                  final lastMessage =
+                                      snapshot.data ?? 'Sin mensajes';
+                                  return Text(
+                                    lastMessage,
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  );
+                                }
+                              },
+                            ),
+                            FutureBuilder<String>(
+                              future: getLastMessageTime(channelID),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Text(
+                                    'Cargando...',
+                                    style: TextStyle(
+                                      fontSize: 14.0,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                } else if (snapshot.hasError) {
+                                  return Text(
+                                    'Error al obtener la hora del mensaje',
+                                    style: TextStyle(
+                                      fontSize: 14.0,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                } else {
+                                  final lastMessageTime =
+                                      snapshot.data ?? '----';
+                                  return Text(
+                                    lastMessageTime,
+                                    style: TextStyle(
+                                      fontSize: 14.0,
+                                      color: Colors.grey,
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 16.0),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                channelName,
-                                style: TextStyle(
-                                    fontSize: 16.0, fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(height: 6.0),
-                              FutureBuilder<String>(
-                                future: getLastMessage(channelID),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return Text(
-                                      'Cargando...',
-                                      style: TextStyle(
-                                          fontSize: 14.0, color: Colors.grey),
-                                    );
-                                  } else if (snapshot.hasError) {
-                                    return Text(
-                                      'Error al obtener el último mensaje',
-                                      style: TextStyle(
-                                          fontSize: 14.0, color: Colors.grey),
-                                    );
-                                  } else {
-                                    final lastMessage =
-                                        snapshot.data ?? 'Sin mensajes';
-                                    return Text(
-                                      lastMessage,
-                                      style: TextStyle(
-                                          fontSize: 14.0, color: Colors.grey),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 16.0),
-                        Text(
-                          '10:30 AM',
-                          style: TextStyle(fontSize: 14.0, color: Colors.grey),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                );
-                channelWidgets.add(channelWidget);
-              }
+                ),
+              );
+              channelWidgets.add(channelWidget);
+            }
           }
           return ListView(
             children: channelWidgets,
@@ -321,10 +373,8 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
 }
 
 class ChatSearchDelegate extends SearchDelegate<String> {
-  @override
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String get searchFieldLabel => 'Buscar chat';
-
-  @override
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
@@ -341,20 +391,197 @@ class ChatSearchDelegate extends SearchDelegate<String> {
     return IconButton(
       icon: Icon(Icons.arrow_back),
       onPressed: () {
-        close(context, ''); // Cerrar la búsqueda y volver al estado anterior
+        close(context, ''); // Cierra la búsqueda y vuelve al estado anterior
       },
     );
   }
 
+  Future<String> getLastMessage(String channelID) async {
+    print(
+        "Getting last message for channel: $channelID"); // Imprime el mensaje de depuración
+
+    final querySnapshot = await _firestore
+        .collection('messages')
+        .doc(channelID)
+        .collection('chats')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final lastMessageDoc = querySnapshot.docs.first;
+      final timestamp = lastMessageDoc.get('timestamp');
+
+      final time =
+          DateTime.fromMillisecondsSinceEpoch(timestamp.seconds * 1000);
+      final formattedTime = DateFormat.jm().format(time);
+      print("Last message time for channel $channelID: $formattedTime");
+      return formattedTime;
+    } else {
+      print("No messages for channel $channelID");
+      return '10:30 AM';
+    }
+  }
+
   @override
   Widget buildResults(BuildContext context) {
-    // Implementar la lógica de búsqueda y mostrar resultados
-    return Text('Resultados de búsqueda para: $query');
+    return FutureBuilder<QuerySnapshot>(
+      future: _firestore
+          .collection('channels') // Cambia aquí a la colección 'channels'
+          .where('name',
+              isGreaterThanOrEqualTo:
+                  query) // Realiza la búsqueda utilizando la consulta
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        } else if (snapshot.hasError) {
+          return Center(
+            child: Text('Error al cargar los resultados'),
+          );
+        } else {
+          final channels = snapshot.data!.docs;
+          return ListView.builder(
+            itemCount: channels.length,
+            itemBuilder: (context, index) {
+              final channel = channels[index];
+              final channelName = channel.get('name');
+              final channelID = channel.id;
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        channel: channelName,
+                        channelID: channelID,
+                      ),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundImage: CachedNetworkImageProvider(
+                          'assets/chat-icon.jpg',
+                        ),
+                      ),
+                      SizedBox(width: 16.0),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              channelName,
+                              style: TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 6.0),
+                            FutureBuilder<String>(
+                              future: getLastMessage(channelID),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Text(
+                                    'Cargando...',
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                  );
+                                } else if (snapshot.hasError) {
+                                  return Text(
+                                    'Error al obtener el último mensaje',
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                  );
+                                } else {
+                                  final lastMessage =
+                                      snapshot.data ?? 'Sin mensajes';
+                                  return Text(
+                                    lastMessage,
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  );
+                                }
+                              },
+                            ),
+                            FutureBuilder<String>(
+                              future: getLastMessageTime(channelID),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Text(
+                                    'Cargando...',
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                  );
+                                } else if (snapshot.hasError) {
+                                  return Text(
+                                    'Error al obtener la hora del mensaje',
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                  );
+                                } else {
+                                  final lastMessageTime =
+                                      snapshot.data ?? '10:30 AM';
+                                  return Text(
+                                    lastMessageTime,
+                                    style: TextStyle(
+                                        fontSize: 14.0, color: Colors.grey),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        }
+      },
+    );
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
     // Mostrar sugerencias mientras el usuario escribe
     return Text('Sugerencias de búsqueda para: $query');
+  }
+
+  Future<String> getLastMessageTime(String channelID) async {
+    print("Getting last message time for channel: $channelID");
+
+    final querySnapshot = await _firestore
+        .collection('messages')
+        .doc(channelID)
+        .collection('chats')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final lastMessageDoc = querySnapshot.docs.first;
+      final timestamp = lastMessageDoc.get('timestamp');
+
+      final time =
+          DateTime.fromMillisecondsSinceEpoch(timestamp.seconds * 1000);
+      final formattedTime = DateFormat.jm().format(time);
+      print("Last message time for channel $channelID: $formattedTime");
+      return formattedTime;
+    } else {
+      print("No messages for channel $channelID");
+      return '10:30 AM';
+    }
   }
 }
