@@ -7,6 +7,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatvenenoso/screens/config_screen.dart';
 import 'Chatscreen.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/gestures.dart';
+import 'package:chatvenenoso/CanalesArchivados.dart';
 
 class ChannelListScreen extends StatefulWidget {
   @override
@@ -22,11 +24,82 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   Map<String, String> lastMessages = {};
 
   late String currentUserUID;
-
+  List<String> userArchivedChannels =
+      []; // Lista de canales archivados por el usuario
   @override
   void initState() {
     super.initState();
     currentUserUID = _auth.currentUser!.uid;
+    _getUserArchivedChannels();
+  }
+
+  Future<void> _showArchiveConfirmationDialog(String channelID) async {
+    bool archiveChat = false; // Variable para almacenar la opción seleccionada
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Archivar Chat'),
+          content: Text('¿Deseas archivar este chat?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false); // No archivar
+              },
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true); // Archivar
+              },
+              child: Text('Sí'),
+            ),
+          ],
+        );
+      },
+    ).then((value) {
+      if (value != null && value is bool) {
+        archiveChat = value;
+        if (archiveChat) {
+          _archiveChannel(channelID); // Archivar el chat si el usuario aceptó
+          // Actualizar la lista de canales aquí
+          setState(() {
+            userArchivedChannels.add(channelID);
+          });
+        }
+      }
+    });
+  }
+
+  Future<void> _getUserArchivedChannels() async {
+    final currentUserDoc =
+        _firestore.collection('usuarios').doc(currentUserUID);
+
+    final userSnapshot = await currentUserDoc.get();
+    if (userSnapshot.exists) {
+      final archivedChannels =
+          userSnapshot.get('chatsarchivados') as List<dynamic>?;
+
+      if (archivedChannels != null) {
+        setState(() {
+          userArchivedChannels = List<String>.from(archivedChannels);
+        });
+      }
+    }
+  }
+
+  Future<void> _archiveChannel(String channelID) async {
+    final currentUserDoc =
+        _firestore.collection('usuarios').doc(currentUserUID);
+
+    // Agregar el canal a la lista de canales archivados del usuario
+    userArchivedChannels.add(channelID);
+
+    // Actualizar la lista de canales archivados del usuario en Firestore
+    await currentUserDoc.update({
+      'chatsarchivados': FieldValue.arrayUnion(userArchivedChannels),
+    });
   }
 
   Future<String> getLastMessage(String channelID) async {
@@ -119,6 +192,8 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
                 _openConfiguracionScreen();
               } else if (value == 'sign_out') {
                 _signOut();
+              } else if (value == 'archived_chats') {
+                _openArchivedChannelsScreen();
               }
             },
           ),
@@ -138,110 +213,119 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
             final channelName = channel.get('name');
             final channelID = channel.id;
             if (channel.get('authorized_users').contains(currentUserUID)) {
-              final channelWidget = InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        channel: channelName,
-                        channelID: channelID,
+              final isChannelArchived =
+                  userArchivedChannels.contains(channelID);
+              if (!isChannelArchived) {
+                final channelWidget = InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          channel: channelName,
+                          channelID: channelID,
+                        ),
                       ),
+                    );
+                  },
+                  onLongPress: () {
+                    _showArchiveConfirmationDialog(
+                        channelID); // Mostrar cuadro emergente de archivar
+                  },
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundImage: CachedNetworkImageProvider(
+                            'assets/chat-icon.jpg',
+                          ),
+                        ),
+                        SizedBox(width: 16.0),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                channelName,
+                                style: TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(height: 6.0),
+                              FutureBuilder<String>(
+                                future: getLastMessage(channelID),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Text(
+                                      'Cargando...',
+                                      style: TextStyle(
+                                          fontSize: 14.0, color: Colors.grey),
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return Text(
+                                      'Error al obtener el último mensaje',
+                                      style: TextStyle(
+                                          fontSize: 14.0, color: Colors.grey),
+                                    );
+                                  } else {
+                                    final lastMessage =
+                                        snapshot.data ?? 'Sin mensajes';
+                                    return Text(
+                                      lastMessage,
+                                      style: TextStyle(
+                                          fontSize: 14.0, color: Colors.grey),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    );
+                                  }
+                                },
+                              ),
+                              FutureBuilder<String>(
+                                future: getLastMessageTime(channelID),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Text(
+                                      'Cargando...',
+                                      style: TextStyle(
+                                        fontSize: 14.0,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    return Text(
+                                      'Error al obtener la hora del mensaje',
+                                      style: TextStyle(
+                                        fontSize: 14.0,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  } else {
+                                    final lastMessageTime =
+                                        snapshot.data ?? '----';
+                                    return Text(
+                                      lastMessageTime,
+                                      style: TextStyle(
+                                        fontSize: 14.0,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundImage: CachedNetworkImageProvider(
-                          'assets/chat-icon.jpg',
-                        ),
-                      ),
-                      SizedBox(width: 16.0),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              channelName,
-                              style: TextStyle(
-                                  fontSize: 16.0, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: 6.0),
-                            FutureBuilder<String>(
-                              future: getLastMessage(channelID),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return Text(
-                                    'Cargando...',
-                                    style: TextStyle(
-                                        fontSize: 14.0, color: Colors.grey),
-                                  );
-                                } else if (snapshot.hasError) {
-                                  return Text(
-                                    'Error al obtener el último mensaje',
-                                    style: TextStyle(
-                                        fontSize: 14.0, color: Colors.grey),
-                                  );
-                                } else {
-                                  final lastMessage =
-                                      snapshot.data ?? 'Sin mensajes';
-                                  return Text(
-                                    lastMessage,
-                                    style: TextStyle(
-                                        fontSize: 14.0, color: Colors.grey),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  );
-                                }
-                              },
-                            ),
-                            FutureBuilder<String>(
-                              future: getLastMessageTime(channelID),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return Text(
-                                    'Cargando...',
-                                    style: TextStyle(
-                                      fontSize: 14.0,
-                                      color: Colors.grey,
-                                    ),
-                                  );
-                                } else if (snapshot.hasError) {
-                                  return Text(
-                                    'Error al obtener la hora del mensaje',
-                                    style: TextStyle(
-                                      fontSize: 14.0,
-                                      color: Colors.grey,
-                                    ),
-                                  );
-                                } else {
-                                  final lastMessageTime =
-                                      snapshot.data ?? '----';
-                                  return Text(
-                                    lastMessageTime,
-                                    style: TextStyle(
-                                      fontSize: 14.0,
-                                      color: Colors.grey,
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
-                ),
-              );
-              channelWidgets.add(channelWidget);
+                );
+                channelWidgets.add(channelWidget);
+              }
             }
           }
           return ListView(
@@ -254,6 +338,16 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
           _showPopupMenu();
         },
         child: Icon(Icons.chat),
+      ),
+    );
+  }
+
+  void _openArchivedChannelsScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ArchivedChannelsScreen(), // Navegar a la pantalla de canales archivados
       ),
     );
   }
