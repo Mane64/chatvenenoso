@@ -47,6 +47,51 @@ class _ArchivedChannelsScreenState extends State<ArchivedChannelsScreen> {
         });
       }
     }
+     
+  }
+   Future<void> _unarchiveChannel(String channelID) async {
+        final currentUserDoc = _firestore.collection('usuarios').doc(currentUserUID);
+        userArchivedChannels.remove(channelID);
+        await currentUserDoc.update({
+       'chatsarchivados': FieldValue.arrayRemove([channelID]),});
+        setState(() {
+          userArchivedChannels = List<String>.from(userArchivedChannels);
+        });
+       
+      }
+
+     Future<void> _showDeleteConfirmationDialog(String channelID) async {
+     return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // Evita que el usuario cierre el diálogo haciendo clic fuera de él
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Eliminar Chat'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('¿Desea eliminar este chat de chats archivados?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+            ),
+            TextButton(
+              child: Text('Sí'),
+              onPressed: () {
+                _unarchiveChannel(channelID); // Llamar al método para desarchivar el canal
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -70,9 +115,9 @@ class _ArchivedChannelsScreenState extends State<ArchivedChannelsScreen> {
             final channelID = channel.id;
             if (userArchivedChannels.contains(channelID)) {
               final channelWidget = InkWell(
-                onTap: () {
-                  // Puedes agregar aquí el código para desarchivar un canal si lo deseas
-                },
+              onLongPress: () {
+                _showDeleteConfirmationDialog(channelID); // Mostrar el diálogo de confirmación al dejar presionado
+              },
                 child: ListTile(
                   title: Text(channelName),
                   leading: CircleAvatar(
