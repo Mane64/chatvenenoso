@@ -18,18 +18,14 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   final TextEditingController _newUserEmailController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _searchQueryController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
   List<String> _searchResults = []; // Store search results
-  List<String> _chatMessages = []; // Add this line to define the chat messages list
-  
-
-
+  List<String> _chatMessages =
+      []; // Add this line to define the chat messages list
 
   List<String> _chatMembers = [];
   Map<String, String> _userNames = {};
   final TextEditingController _descriptionController = TextEditingController();
   bool _isEditingDescription = false;
-
 
   @override
   void initState() {
@@ -44,40 +40,39 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
         .get();
     final chatData = chatSnapshot.data();
 
-  if (chatData != null) {
-    _chatNameController.text = chatData['name'];
-    _descriptionController.text = chatData['description'] ?? ''; // Asignar la descripción o una cadena vacía
-    setState(() {
-      _chatMembers = List<String>.from(chatData['authorized_users']);
-    });
-    _getUserNames();
-  }
-  }
-
-
-void _saveChatName() {
-  final newChatName = _chatNameController.text.trim();
-  if (newChatName.isNotEmpty) {
-    FirebaseFirestore.instance
-        .collection('channels')
-        .doc(widget.channelID)
-        .update({
-      'name': newChatName,
-    }).then((_) {
+    if (chatData != null) {
+      _chatNameController.text = chatData['name'];
+      _descriptionController.text = chatData['description'] ??
+          ''; // Asignar la descripción o una cadena vacía
       setState(() {
-        _chatNameController.text = newChatName;
+        _chatMembers = List<String>.from(chatData['authorized_users']);
       });
-      _chatNameController.clear(); // Limpiar el campo de texto
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Nombre del chat actualizado')));
-      _fetchChatData(); // Actualizar la información del chat
-    }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al actualizar el nombre del chat')));
-    });
+      _getUserNames();
+    }
   }
-}
 
+  void _saveChatName() {
+    final newChatName = _chatNameController.text.trim();
+    if (newChatName.isNotEmpty) {
+      FirebaseFirestore.instance
+          .collection('channels')
+          .doc(widget.channelID)
+          .update({
+        'name': newChatName,
+      }).then((_) {
+        setState(() {
+          _chatNameController.text = newChatName;
+        });
+        _chatNameController.clear(); // Limpiar el campo de texto
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Nombre del chat actualizado')));
+        _fetchChatData(); // Actualizar la información del chat
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al actualizar el nombre del chat')));
+      });
+    }
+  }
 
   void _getUserNames() async {
     for (String userId in _chatMembers) {
@@ -147,8 +142,6 @@ void _saveChatName() {
     });
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     final currentUserID = _auth.currentUser?.uid ?? '';
@@ -178,7 +171,7 @@ void _saveChatName() {
             },
             onSelected: (value) {
               if (value == 'invite') {
-                      _showAddUserDialog();
+                _showAddUserDialog();
               } else if (value == 'exit') {
                 showDialog(
                   context: context,
@@ -211,15 +204,18 @@ void _saveChatName() {
           ),
         ],
       ),
-      body:Column(
+      body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
             padding: EdgeInsets.all(16),
             child: CircleAvatar(
-              radius: 60,// Coloca aquí la imagen del grupo o el icono
+              radius: 60, // Coloca aquí la imagen del grupo o el icono
               // Puedes usar un AssetImage, NetworkImage, etc.
-              child: Icon(Icons.group,size: 100,),
+              child: Icon(
+                Icons.group,
+                size: 100,
+              ),
             ),
           ),
           Text(
@@ -229,26 +225,25 @@ void _saveChatName() {
           ),
           SizedBox(height: 8),
           Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: Icon(Icons.person_add),
-          onPressed: () { 
-            _showAddUserDialog();
-          },
-        ),
-        Text('Añadir'),
-        SizedBox(width: 20),
-        IconButton(
-          icon: Icon(Icons.search),
-          onPressed: () {
-           _performSearch(_searchQueryController.text);
-
-          },
-        ),
-        Text('Buscar'),
-      ],
-    ),
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: Icon(Icons.person_add),
+                onPressed: () {
+                  _showAddUserDialog();
+                },
+              ),
+              Text('Añadir'),
+              SizedBox(width: 20),
+              IconButton(
+                icon: Icon(Icons.search),
+                onPressed: () {
+                  _performSearch(_searchQueryController.text);
+                },
+              ),
+              Text('Buscar'),
+            ],
+          ),
           TextField(
             controller: _chatNameController,
             decoration: InputDecoration(
@@ -256,7 +251,8 @@ void _saveChatName() {
               border: OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: Icon(Icons.edit),
-                onPressed: _saveChatName, // Actualizar el nombre al presionar el botón
+                onPressed:
+                    _saveChatName, // Actualizar el nombre al presionar el botón
               ),
             ),
           ),
@@ -295,8 +291,9 @@ void _saveChatName() {
                           ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('Descripción guardada')));
                         }).catchError((error) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error al guardar la descripción')));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content:
+                                  Text('Error al guardar la descripción')));
                         });
                       }
                     : null,
@@ -400,7 +397,7 @@ void _saveChatName() {
     }
   }
 
-   void _showAddUserDialog() {
+  void _showAddUserDialog() {
     showDialog(
       context: context,
       builder: (context) {
@@ -432,63 +429,62 @@ void _saveChatName() {
   }
 
   void _showSearchDialog() {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text('Buscar Mensajes'),
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _searchQueryController,
-              decoration: InputDecoration(hintText: 'Ingrese su búsqueda'),
-            ),
-            SizedBox(height: 16), // Add spacing between the search field and results
-            Expanded(
-              child: ListView.builder(
-                itemCount: _searchResults.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_searchResults[index]),
-                    // Other ListTile properties as needed
-                  );
-                },
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Buscar Mensajes'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _searchQueryController,
+                decoration: InputDecoration(hintText: 'Ingrese su búsqueda'),
               ),
+              SizedBox(
+                  height:
+                      16), // Add spacing between the search field and results
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _searchResults.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_searchResults[index]),
+                      // Other ListTile properties as needed
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                _performSearch(_searchQueryController.text);
+                Navigator.pop(context);
+              },
+              child: Text('Buscar'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              _performSearch(_searchQueryController.text);
-              Navigator.pop(context);
-            },
-            child: Text('Buscar'),
-          ),
-        ],
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
+  void _performSearch(String query) {
+    List<String> filteredMessages = _chatMessages
+        .where((message) => message.toLowerCase().contains(query.toLowerCase()))
+        .toList();
 
-void _performSearch(String query) {
-  List<String> filteredMessages = _chatMessages.where((message) =>
-      message.toLowerCase().contains(query.toLowerCase())).toList();
-
-  setState(() {
-    _searchResults = filteredMessages; // Update search results
-  });
-}
-
-
-   
+    setState(() {
+      _searchResults = filteredMessages; // Update search results
+    });
+  }
 }

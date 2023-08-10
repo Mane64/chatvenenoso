@@ -114,72 +114,74 @@ class _ChatScreenState extends State<ChatScreen> {
                 final messages = snapshot.data!.docs;
                 List<Widget> messageWidgets = [];
                 for (var message in messages) {
-  final messageText = message.get('text');
-  final sender = message.get('sender');
-  final timestamp = message.get('timestamp');
-  final messageTime = timestamp != null ? (timestamp as Timestamp).toDate() : DateTime.now();
+                  final messageText = message.get('text');
+                  final sender = message.get('sender');
+                  final timestamp = message.get('timestamp');
+                  final messageTime = timestamp != null
+                      ? (timestamp as Timestamp).toDate()
+                      : DateTime.now();
 
-  final messageBubble = ChatBubble(
-    clipper: ChatBubbleClipper9(
-      type: sender == _auth.currentUser!.uid
-          ? BubbleType.sendBubble
-          : BubbleType.receiverBubble,
-    ),
-    alignment: sender == _auth.currentUser!.uid
-        ? Alignment.topRight
-        : Alignment.topLeft,
-    margin: EdgeInsets.only(top: 8, bottom: 8),
-    backGroundColor: sender == _auth.currentUser!.uid
-        ? Colors.blue
-        : Colors.white,
-    child: Column(
-      crossAxisAlignment: sender == _auth.currentUser!.uid
-          ? CrossAxisAlignment.end
-          : CrossAxisAlignment.start,
-      children: [
-        Text(
-          sender == _auth.currentUser!.uid
-              ? 'Tú'
-              : message.get('senderName'),
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
-        Text(
-          messageText,
-          style: TextStyle(
-            color: sender == _auth.currentUser!.uid
-                ? Colors.white
-                : Colors.black,
-          ),
-        ),
-      ],
-    ),
-  );
+                  final messageBubble = ChatBubble(
+                    clipper: ChatBubbleClipper9(
+                      type: sender == _auth.currentUser!.uid
+                          ? BubbleType.sendBubble
+                          : BubbleType.receiverBubble,
+                    ),
+                    alignment: sender == _auth.currentUser!.uid
+                        ? Alignment.topRight
+                        : Alignment.topLeft,
+                    margin: EdgeInsets.only(top: 8, bottom: 8),
+                    backGroundColor: sender == _auth.currentUser!.uid
+                        ? Colors.blue
+                        : Colors.white,
+                    child: Column(
+                      crossAxisAlignment: sender == _auth.currentUser!.uid
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          sender == _auth.currentUser!.uid
+                              ? 'Tú'
+                              : message.get('senderName'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        Text(
+                          messageText,
+                          style: TextStyle(
+                            color: sender == _auth.currentUser!.uid
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
 
-  final timeWidget = Align(
-    alignment: sender == _auth.currentUser!.uid
-        ? Alignment.bottomRight
-        : Alignment.bottomLeft,
-    child: Text(
-      DateFormat('HH:mm').format(messageTime),
-      style: TextStyle(
-        fontSize: 10,
-        color: Colors.grey[500],
-      ),
-    ),
-  );
+                  final timeWidget = Align(
+                    alignment: sender == _auth.currentUser!.uid
+                        ? Alignment.bottomRight
+                        : Alignment.bottomLeft,
+                    child: Text(
+                      DateFormat('HH:mm').format(messageTime),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  );
 
-  final messageWidget = Column(
-    children: [
-      messageBubble,
-      timeWidget,
-    ],
-  );
+                  final messageWidget = Column(
+                    children: [
+                      messageBubble,
+                      timeWidget,
+                    ],
+                  );
 
-  messageWidgets.add(messageWidget);
-}
+                  messageWidgets.add(messageWidget);
+                }
 
                 return ListView(
                   children: messageWidgets,

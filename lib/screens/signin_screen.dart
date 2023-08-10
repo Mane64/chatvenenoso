@@ -5,7 +5,6 @@ import 'package:chatvenenoso/screens/reset_password.dart';
 import 'package:chatvenenoso/screens/signinup_screen.dart';
 import 'package:chatvenenoso/utils/color_utils.dart';
 import 'package:chatvenenoso/Canales.dart';
-import 'package:chatvenenoso/foto.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -156,7 +155,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 );
               },
               pageBuilder: (context, animation, secondaryAnimation) {
-                return MyApp(); //ddddddddd
+                return ResetPassword(); //ddddddddd
               },
             ),
           );

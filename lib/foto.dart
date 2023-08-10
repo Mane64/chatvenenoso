@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:chatvenenoso/reusable_widgets/upload_image.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -44,7 +43,6 @@ class _MyAppState extends State<MyApp> {
           ),
           ElevatedButton(
             onPressed: () async {
-              final uploaded = await uploadImage();
               if (imagen_to_upload != null) {
               } else {
                 return;

@@ -7,7 +7,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chatvenenoso/screens/config_screen.dart';
 import 'Chatscreen.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/gestures.dart';
 import 'package:chatvenenoso/CanalesArchivados.dart';
 
 class ChannelListScreen extends StatefulWidget {
@@ -19,8 +18,6 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final TextEditingController _newChannelController = TextEditingController();
-  final TextEditingController _searchController =
-      TextEditingController(); // New controller for search
   Map<String, String> lastMessages = {};
 
   late String currentUserUID;
@@ -156,6 +153,7 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('UPP VIBORE SA. DE CV.'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Icon(Icons.search),
@@ -362,8 +360,6 @@ class _ChannelListScreenState extends State<ChannelListScreen> {
   }
 
   void _showPopupMenu() {
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
     final relativePosition = RelativeRect.fromLTRB(1000, 80, 0, 0);
 
     showMenu<String>(

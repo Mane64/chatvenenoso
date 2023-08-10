@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:chatvenenoso/screens/signin_screen.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:uuid/Uuid.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chatvenenoso/screens/config_screen.dart';
-import 'Chatscreen.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter/gestures.dart';
-import 'package:chatvenenoso/CanalesArchivados.dart';
+import 'package:chatvenenoso/Canales.dart';
 
 class ArchivedChannelsScreen extends StatefulWidget {
   @override
@@ -47,23 +39,25 @@ class _ArchivedChannelsScreenState extends State<ArchivedChannelsScreen> {
         });
       }
     }
-     
   }
-   Future<void> _unarchiveChannel(String channelID) async {
-        final currentUserDoc = _firestore.collection('usuarios').doc(currentUserUID);
-        userArchivedChannels.remove(channelID);
-        await currentUserDoc.update({
-       'chatsarchivados': FieldValue.arrayRemove([channelID]),});
-        setState(() {
-          userArchivedChannels = List<String>.from(userArchivedChannels);
-        });
-       
-      }
 
-     Future<void> _showDeleteConfirmationDialog(String channelID) async {
-     return showDialog<void>(
+  Future<void> _unarchiveChannel(String channelID) async {
+    final currentUserDoc =
+        _firestore.collection('usuarios').doc(currentUserUID);
+    userArchivedChannels.remove(channelID);
+    await currentUserDoc.update({
+      'chatsarchivados': FieldValue.arrayRemove([channelID]),
+    });
+    setState(() {
+      userArchivedChannels = List<String>.from(userArchivedChannels);
+    });
+  }
+
+  Future<void> _showDeleteConfirmationDialog(String channelID) async {
+    return showDialog<void>(
       context: context,
-      barrierDismissible: false, // Evita que el usuario cierre el diálogo haciendo clic fuera de él
+      barrierDismissible:
+          false, // Evita que el usuario cierre el diálogo haciendo clic fuera de él
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Eliminar Chat'),
@@ -84,7 +78,8 @@ class _ArchivedChannelsScreenState extends State<ArchivedChannelsScreen> {
             TextButton(
               child: Text('Sí'),
               onPressed: () {
-                _unarchiveChannel(channelID); // Llamar al método para desarchivar el canal
+                _unarchiveChannel(
+                    channelID); // Llamar al método para desarchivar el canal
                 Navigator.of(context).pop(); // Cerrar el diálogo
               },
             ),
@@ -99,6 +94,21 @@ class _ArchivedChannelsScreenState extends State<ArchivedChannelsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Canales Archivados'),
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.refresh),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ChannelListScreen(), // Cargar ChannelListScreen
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _firestore.collection('channels').snapshots(),
@@ -115,9 +125,10 @@ class _ArchivedChannelsScreenState extends State<ArchivedChannelsScreen> {
             final channelID = channel.id;
             if (userArchivedChannels.contains(channelID)) {
               final channelWidget = InkWell(
-              onLongPress: () {
-                _showDeleteConfirmationDialog(channelID); // Mostrar el diálogo de confirmación al dejar presionado
-              },
+                onLongPress: () {
+                  _showDeleteConfirmationDialog(
+                      channelID); // Mostrar el diálogo de confirmación al dejar presionado
+                },
                 child: ListTile(
                   title: Text(channelName),
                   leading: CircleAvatar(
