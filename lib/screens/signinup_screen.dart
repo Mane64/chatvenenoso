@@ -150,6 +150,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'nombre': userName, // Agregar el nombre de usuario
         'email': email,
         'uid': newUserUID,
+        'chatsarchivados': FieldValue.arrayUnion([""]),
         'friends': FieldValue.arrayUnion(["ibyu0jeJRtUHDTGW09B6pYN4l0C3"]),
       });
 
